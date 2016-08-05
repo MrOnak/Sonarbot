@@ -312,9 +312,45 @@ class CommandQueue {
     return s;
   }    
   
+  private float convertStringToFloat(String text) {
+    return this.convertBytesToFloat(this.convertStringToBytes(text));
+  }
   
+  private int convertStringToInt(String text) {
+    return this.convertBytesToInt(this.convertStringToBytes(text));
+  }
   
+  private byte[] convertStringToBytes(String text) {
+    return text.getBytes();
+  }
   
+  /**
+   * converts a four byte representation of a integer into a int primitive
+   *
+   * SHOULD NOT BE NECESSARY TO CALL THIS FROM HI-LEVEL FUNCTIONS
+   *
+   * @param byte[] b     expects a 4 byte array
+   * @return int
+   */
+  private int convertBytesToInt(byte[] b) {
+    byte[] f = new byte[]{b[0], b[1], b[2], b[3]};
+    return ByteBuffer.wrap(f).getInt();
+  }
+  
+  /**
+   * converts a four byte representation of a float into a float primitive
+   *
+   * SHOULD NOT BE NECESSARY TO CALL THIS FROM HI-LEVEL FUNCTIONS
+   *
+   * @param byte[] b     expects a 4 byte array
+   * @return float
+   */
+  private float convertBytesToFloat(byte[] b) {
+    byte[] f = new byte[]{b[0], b[1], b[2], b[3]};
+    return ByteBuffer.wrap(f).getFloat();
+  }
+  
+    
   
   
   
@@ -504,7 +540,7 @@ class CommandQueue {
   
   void processCmdBatteryResponse(String[] list) {
     if (list[0].charAt(1) == 'B') {
-      float v = convertStringToFloat(list[1]);
+      float v = this.convertStringToFloat(list[1]);
       println(v);
       bot.setVoltage(v);
     }
@@ -512,8 +548,8 @@ class CommandQueue {
   
   void processCmdSonarPingResponse(String[] list) {  
     if (list[0].charAt(1) == 'P') {
-      int angle = convertStringToInt(list[1]);
-      int range = convertStringToInt(list[2]);
+      int angle = this.convertStringToInt(list[1]);
+      int range = this.convertStringToInt(list[2]);
       println("angle: "+ angle + " range: " + range);
       
       if (this.lastCommand == this.CMD_SONARPING) {

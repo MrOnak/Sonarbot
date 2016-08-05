@@ -165,7 +165,7 @@ void drawCues() {
     noFill();
     
     ellipse(mX, mY, botRadius, botRadius);
-    line(mX, mY, mX + botRadius * cos(radians(angle)), mY + botRadius * sin(radians(angle)));
+    line(mX, mY, mX + botRadius * cos(radians(angle + bot.getAngle())), mY + botRadius * sin(radians(angle + bot.getAngle())));
     
     fill(0, 0, 0, 80);
     noStroke();
