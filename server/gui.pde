@@ -150,7 +150,7 @@ void drawCues() {
     rectMode(CORNER);
     stroke(0, 255, 0, 100);
     strokeWeight(1);
-    line(botX, botY, botX + botRadius * cos(radians(angle)), botY + botRadius * sin(radians(angle)));
+    line(botX, botY, botX + botRadius * cos(radians(angle + bot.getAngle())), botY + botRadius * sin(radians(angle + bot.getAngle())));
 
     fill(0, 0, 0, 80);
     noStroke();
@@ -259,9 +259,11 @@ void keyReleased() {
       break;
     case 's':
       println("performing sonar sweep");
+      commandHandler.addCommand(commandHandler.CMD_SONARSWEEP, -60, 60, 2);
       break;
     case 'b':
       println("querying battery voltage");
+      commandHandler.addCommand(commandHandler.CMD_BATTERY);
       break;
     default:
   }
@@ -302,71 +304,31 @@ void mouseClicked(MouseEvent event) {
   int mX = mouseX;
   int mY = mouseY;
   int angle, dist;
-  
-  if (command == CMD_NOOP) {
-    //buttonClicked();
-    if (keyPressed == true) {
-      switch (key) {
-        case 'r':
-          angle = bot.getRotationToScreenPos(mX, mY);        
-          println("rotating bot by " + angle + " degrees");
-          break;
-        case 'm':
-          dist  = bot.getDistanceToScreenPos(mX, mY);
-          angle = bot.getRotationToScreenPos(mX, mY);        
-          println("moving bot to position for " + dist + " mm after rotating by " + angle + " degrees");
-          break;
-        default:
-      }
+
+  if (keyPressed == true) {
+    switch (key) {
+      case 'r':
+        angle = bot.getRotationToScreenPos(mX, mY);        
+        println("rotating bot by " + angle + " degrees");
+        if (angle > 0) {
+          commandHandler.addCommand(commandHandler.CMD_TURNRIGHT, angle);
+        } else {
+          commandHandler.addCommand(commandHandler.CMD_TURNLEFT, angle);
+        }
+        break;
+      case 'm':
+        dist  = bot.getDistanceToScreenPos(mX, mY);
+        angle = bot.getRotationToScreenPos(mX, mY);        
+        println("moving bot to position for " + dist + " mm after rotating by " + angle + " degrees");
+        
+        if (angle > 0) {
+          commandHandler.addCommand(commandHandler.CMD_TURNRIGHT, angle);
+        } else {
+          commandHandler.addCommand(commandHandler.CMD_TURNLEFT, angle);
+        }
+        commandHandler.addCommand(commandHandler.CMD_MOVEFORWARD, dist);
+        break;
+      default:
     }
   }
-}
-
-void buttonClicked() {
-  if (mouseX >= buttonStartX && mouseX < buttonStartX + buttonLength) {
-    if (mouseY >= batteryButtonStartY && mouseY < batteryButtonStartY + buttonHeight) {
-      // battery
-      sendCmdBattery();
-    }
-    
-    if (mouseY >= turnLeftButtonStartY && mouseY < turnLeftButtonStartY + buttonHeight) {
-      // turn left
-      sendCmdTurnLeft(90);
-    }
-    
-    if (mouseY >= turnRightButtonStartY && mouseY < turnRightButtonStartY + buttonHeight) {
-      // turn right
-      sendCmdTurnRight(90);
-    }
-    
-    if (mouseY >= moveFwdButtonStartY && mouseY < moveFwdButtonStartY + buttonHeight) {
-      // move forward
-      sendCmdMoveForward(100);
-    }
-    
-    if (mouseY >= moveBackButtonStartY && mouseY < moveBackButtonStartY + buttonHeight) {
-      // move backward
-      sendCmdMoveBackward(100);
-    }
-    
-    if (mouseY >= lcdClearButtonStartY && mouseY < lcdClearButtonStartY + buttonHeight) {
-      // clear LCD
-      sendCmdLcdClear();
-    }
-    
-    if (mouseY >= lcdWriteButtonStartY && mouseY < lcdWriteButtonStartY + buttonHeight) {
-      // write to LCD
-      sendCmdLcdWrite(0, 0, "hello");
-    }
-    
-    if (mouseY >= sonarPingButtonStartY && mouseY < sonarPingButtonStartY + buttonHeight) {
-      // sonar ping
-      sendCmdSonarPing(0);
-    }
-    
-    if (mouseY >= sonarSweepButtonStartY && mouseY < sonarSweepButtonStartY + buttonHeight) {
-      // sonar sweep
-      sendCmdSonarSweep(-60, 60, 2);
-    }
-  }  
 }

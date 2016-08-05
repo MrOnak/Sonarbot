@@ -1,91 +1,5 @@
 
-/**
- * takes any number of arguments and ends them over serial
- * in the order they've been given
- *
- * SHOULD NOT BE NECESSARY TO CALL THIS FROM HI-LEVEL FUNCTIONS
- *
- * @param Serial port
- * @param Object... objects
- */
-void writeToSerial(Serial port, Object... objects) {
-  for (Object o : objects) {
-    if (o.getClass().equals(Integer.class)) {
-      //println("...integer");
-      Integer i = (Integer) o;
-      writeIntToSerial(port, i.intValue());
-      
-    } else if (o.getClass().equals(Float.class)) {
-      //println("...float");
-      Float f = (Float) o;
-      writeFloatToSerial(port, f.floatValue());
-    
-    } else if (o.getClass().equals(Byte.class)) {
-      byte b = (byte) o;
-      port.write(b);
-      
-    } else if (o.getClass().equals(String.class)) {
-      //println("...string");
-      String s = (String) o;
-      writeStringToSerial(port, s);
-      
-    } else {
-      println("...unrecognized type");
-    }
-  }
-}
 
-/**
- * converts a Java int to four bytes and sends those individually, MSB first
- *
- * SHOULD NOT BE NECESSARY TO CALL THIS FROM HI-LEVEL FUNCTIONS
- *
- * @param Serial port
- * @param int number
- * @return void
- */
-void writeIntToSerial(Serial port, int number) {
-  port.write((number >> 24));
-  port.write((number >> 16));
-  port.write((number >> 8));
-  port.write(number);
-}
-
-/**
- * converts a Java float to four bytes and sends those individually, MSB first
- *
- * SHOULD NOT BE NECESSARY TO CALL THIS FROM HI-LEVEL FUNCTIONS
- *
- * @param Serial port
- * @param int number
- * @return void
- */
-void writeFloatToSerial(Serial port, float number) {
-  byte[] f = convertFloatToBytes(number);
-  
-  port.write(f[0]);
-  port.write(f[1]);
-  port.write(f[2]);
-  port.write(f[3]);
-}
-
-/**
- * converts a Java String into its byte representation and sends those individually
- *
- * SHOULD NOT BE NECESSARY TO CALL THIS FROM HI-LEVEL FUNCTIONS
- *
- * @param Serial port
- * @param String text
- * @return void
- */
-void writeStringToSerial(Serial port, String text) {
-  int len = text.length();
-  //println("..." + text);
-  
-  for (int i = 0; i < len; i++) {
-    port.write(byte(text.charAt(i)));
-  }
-}
 
 
 byte[] convertToByteArray(int integer) {
@@ -139,9 +53,9 @@ float convertBytesToFloat(byte[] b) {
  * @param float number
  * @return byte[]
  */
-byte[] convertFloatToBytes(float number) {
-  return ByteBuffer.allocate(4).putFloat(number).array();
-}
+//byte[] convertFloatToBytes(float number) {
+//  return ByteBuffer.allocate(4).putFloat(number).array();
+//}
 
 byte[] convertStringToBytes(String text) {
   return text.getBytes();
