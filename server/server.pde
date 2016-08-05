@@ -16,7 +16,7 @@ void setup() {
   conn              = new SerialConnection(this, 115200);
   commandHandler    = new CommandQueue(conn);
   bot               = new SonarBot(0, 0, 0.0, 5.0);
-  grid              = new Landscape(1001, 1001);
+  grid              = new Landscape(1001, 1001);           // 10x10 m³
   batteryCheckTimer = 0;
    
   guiInit();
@@ -28,7 +28,7 @@ void draw() {
   guiRefresh();
   
   if (batteryCheckTimer > 3600 * 5) {
-    commandHandler.addCommand(commandHandler.CMD_BATTERY);
+    commandHandler.addCommand(CommandQueue.CMD_BATTERY);
     batteryCheckTimer = 0;
   }
   

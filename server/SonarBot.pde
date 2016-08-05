@@ -8,6 +8,14 @@ class SonarBot {
   float angle;
   final int BOT_RADIUS = 47;                   // in mm
     
+ /**
+  * constructor
+  *
+  * @param int x
+  * @param int y
+  * @param float a angle
+  * @param float v voltage
+  */
   SonarBot(int x, int y, float a, float v) {
     this.setPosX(x);
     this.setPosY(y);
@@ -15,6 +23,14 @@ class SonarBot {
     this.setVoltage(v);    
   }
     
+ /** 
+  * draws the bot
+  *
+  * @param float centerX
+  * @param float centerY
+  * @param float scrollX
+  * @param float scrollY
+  */
   void draw(float centerX, float centerY, float scrollX, float scrollY) {
     float angle  = radians(this.angle);
     float radius = scaleMMtoPx(this.BOT_RADIUS);
@@ -24,121 +40,124 @@ class SonarBot {
     stroke(255, 255, 255);
     strokeWeight(1);
     fill(0, 0, 0, 70);
-    ellipse(x, 
-            y, 
-            radius, 
-            radius);
-    
-    line(x, 
-         y, 
-         x + radius * cos(angle), 
-         y + radius * sin(angle)
+    ellipse(x, y, radius, radius);
+    line(x, y, x + radius * cos(angle), y + radius * sin(angle)
     );
   }  
   
-  /**
-   * @return x coordinate of the bot in mm 
-   */
+ /**
+  * @return x coordinate of the bot in mm 
+  */
   int getPosX() {
     return this.posX;
   }
   
+ /**
+  * returns the x-coordinate of the bot according to the current viewport
+  *
+  * @return int
+  */
   int getScreenPosX() {
     return int(scaleMMtoPx(this.posX) + centerX + scrollX);
   }
   
-  /**
-   * @param int x x-coordinate of the bot in mm
-   */
+ /**
+  * @param int x x-coordinate of the bot in mm
+  */
   void setPosX(int x) {
     this.posX = x;
   }
   
-  /**
-   * @return y-coordinate of the bot in mm 
-   */
+ /**
+  * @return y-coordinate of the bot in mm 
+  */
   int getPosY() {
     return this.posY;
   }
-  
+    
+ /**
+  * returns the y-coordinate of the bot according to the current viewport
+  *
+  * @return int
+  */
   int getScreenPosY() {
     return int(scaleMMtoPx(this.posY) + centerY + scrollY);
   }
   
-  /**
-   * @param int y y-coordinate of the bot in mm
-   */
+ /**
+  * @param int y y-coordinate of the bot in mm
+  */
   void setPosY(int y) {
     this.posY = y;
   }
   
-  /**
-   * updates the bots position (posX, posY) after moving the given distance
-   *
-   * @param int distance
-   */
+ /**
+  * updates the bots position (posX, posY) after moving the given distance
+  *
+  * @param int distance
+  */
   void move(int distance) {
     this.posX += int(distance * cos(radians(this.angle)));
     this.posY += int(distance * sin(radians(this.angle)));    
   }
   
-  /**
-   * @return rotation of the bot in degrees
-   */
+ /**
+  * @return rotation of the bot in degrees
+  */
   float getAngle() {
     return this.angle;
   }
   
-  /** 
-   * @param float a rotation of the bot in degrees
-   */
+ /** 
+  * @param float a rotation of the bot in degrees
+  */
   void setAngle(float a) {
     this.angle = a;
   }
   
-  /**
-   * adds a rotation to the current angle
-   *
-   * @param float a
-   */
+ /**
+  * adds a rotation to the current angle
+  *
+  * @param float a
+  */
   void rotate(float a) {
     this.angle += a;
   }
   
-  /**
-   * @return battery capacity of the bot in V
-   */
+ /**
+  * @return battery capacity of the bot in V
+  */
   float getVoltage() {
     return this.voltage;
   }
   
-  /**
-   * @param float v battery capacity of the bot in V
-   */
+ /**
+  * @param float v battery capacity of the bot in V
+  */
   void setVoltage(float v) {
     this.voltage = v;
   }
 
-  /**
-   * returns a distance in mm between the bot and a position on the screen
-   *
-   * @param int x
-   * @param int y
-   * @return int distance in mm
-   */
+ /**
+  * returns a distance in mm between the bot and a position on the screen
+  *
+  * @param int x
+  * @param int y
+  * @return int distance in mm
+  */
   int getDistanceToScreenPos(int x, int y) {
     return round(scalePxToMM(sqrt(pow(this.getScreenPosX() - x, 2) + pow(this.getScreenPosY() - y, 2))));
   }
   
-  /**
-   * returns the rotation required for the bot to face a position on the screen.
-   *
-   * negative values indicate a rotation to the left, positive values to the right.
-   *
-   * @param int x
-   * @param int y
-   * @return rotation in degrees
-   */
+ /**
+  * returns the rotation required for the bot to face a position on the screen.
+  *
+  * negative values indicate a rotation to the left, positive values to the right.
+  *
+  * @param int x
+  * @param int y
+  * @return rotation in degrees
+  */
   int getRotationToScreenPos(int x, int y) {
     int a = round(degrees(atan2(y - this.getScreenPosY(), x - this.getScreenPosX())));
     // correct for heading

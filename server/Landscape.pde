@@ -19,6 +19,12 @@ class Landscape {
   int gridCenterY;
   final int CELL_SIZE = 10; // in mm
   
+ /**
+  * constructor
+  *
+  * @param int w
+  * @param int h
+  */
   Landscape(int w, int h) {
     this.width = w;
     this.height = h;
@@ -35,6 +41,12 @@ class Landscape {
     this.grid[this.gridCenterX][this.gridCenterY] = 100;  // @todo remove this
   }
   
+ /**
+  * draws the sonar data based on the current view
+  *
+  * @param float scrollX
+  * @param float scrollY
+  */
   void draw(float scrollX, float scrollY) {
     float edgeLen = scaleMMtoPx(this.CELL_SIZE);
 
@@ -54,8 +66,6 @@ class Landscape {
     
     rectMode(CENTER);
     noStroke();
-/*    stroke(0, 0, 0, 100);
-    strokeWeight(1);*/
         
     for (int y = 0; y <= cellsY; y++) {
       for (int x = 0; x <= cellsX; x++) {

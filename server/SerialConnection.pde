@@ -2,18 +2,25 @@ import processing.serial.*;
 
 class SerialConnection {
   Serial port;
+
+ /**
+  * this is the somewhat 'public' buffer of commands
+  *
+  * each entry in the array is a complete command.
+  * while commands are still in transmission they are not in this array
+  */
   ArrayList<String> inputBuffer;
   
-  /** 
-   * byte-stream from the robot. 
-   *
-   * this variable is being filled from the serialEvent() callback in the main applet
-   */
+ /** 
+  * byte-stream from the robot. 
+  *
+  * this variable is being filled from the serialEvent() callback in the main applet
+  */
   String currentBuffer;
   
-  /**
-   * buffer-in-progress. This is continuously being worked on as SerialConnection.processSerial() is called
-   */
+ /**
+  * buffer-in-progress. This is continuously being worked on as SerialConnection.processSerial() is called
+  */
   String processingBuffer;
   
   private static final char SRLCMD_CHAR_START = '#';
@@ -28,14 +35,17 @@ class SerialConnection {
   private static final byte SRLCMD_STATE_CMDAVAILABLE = 4;         // received '\n' terminator char (possibly preceeded by payload chars)
   private static final byte SRLCMD_STATE_ERR = 10;                 // unexpected char over Serial. this error is irrecoverable at the moment
   
+ /**
+  * internal state of the state machine
+  */
   private byte cmdState;
   
-  /**
-   * constructor.
-   *
-   * @param PApplet o
-   * @param int baudrate
-   */
+ /**
+  * constructor.
+  *
+  * @param PApplet o
+  * @param int baudrate
+  */
   SerialConnection(PApplet o, int baudrate) {
     this.currentBuffer     = "";
     this.processingBuffer  = "";
@@ -50,32 +60,35 @@ class SerialConnection {
     }
   }
   
-  /** 
-   * call this from the main applet inside the serialEvent() function like follows
-   * where 'conn' is your instance of this SerialConnection class.
-   *
-   * void serialEvent (Serial sp) {
-   *   conn.appendBuffer(sp.readString());
-   * }
-   */
+ /** 
+  * call this from the main applet inside the serialEvent() function like follows
+  * where 'conn' is your instance of this SerialConnection class.
+  *
+  * void serialEvent (Serial sp) {
+  *   conn.appendBuffer(sp.readString());
+  * }
+  */
   void appendBuffer(String stream) {
     this.currentBuffer += stream;
   }
   
-  /**
-   * processes the input buffer
-   *
-   * call this in draw() or periodically from somewhere else
-   */
+ /**
+  * state machine that processes the data stream from the robot and provides a new
+  * command as soon as it is fully transmitted
+  *
+  * call this in draw() or frequently from somewhere else
+  */
   void processSerial() {
     char inChar;
     
-    // only read Serial data when there is no current command
+    // only read Serial data when there is some
     if (this.currentBuffer.length() > 0) {
           
+      // read left-most char from buffer
       inChar = this.currentBuffer.charAt(0);
       this.currentBuffer = this.currentBuffer.substring(1);
       
+      // run the state machine
       switch (this.cmdState) {
         case SerialConnection.SRLCMD_STATE_IDLE:
           if (inChar == SerialConnection.SRLCMD_CHAR_START) {
@@ -102,7 +115,7 @@ class SerialConnection {
          
         case SerialConnection.SRLCMD_STATE_WAITINGFORPAYLOAD:
           if (inChar == SerialConnection.SRLCMD_CHAR_END) {
-            // payload end has been reached, move current buffer to queue
+            // payload end has been reached, move current buffer to queue and reset
             this.inputBuffer.add(this.processingBuffer);
             this.processingBuffer = "";
             this.cmdState = SerialConnection.SRLCMD_STATE_IDLE;
@@ -119,11 +132,11 @@ class SerialConnection {
     }
   }
   
-  /**
-   * returns a response from the robot if a whole response has been received, the empty string otherwise
-   *
-   * @return String
-   */
+ /**
+  * returns a response from the robot if a whole response has been received, the empty string otherwise
+  *
+  * @return String
+  */
   String readResponse() {
     String response = "";
     
@@ -134,20 +147,20 @@ class SerialConnection {
     return response;
   }
   
-  /**
-   * returns true if the serial port is open, false otherwise
-   *
-   * @return boolean
-   */
+ /**
+  * returns true if the serial port is open, false otherwise
+  *
+  * @return boolean
+  */
   boolean connected() {
     return (this.port != null);
   }
   
-  /**
-   * writes the byte stream to the serial connection
-   *
-   * @param ArrayList<Byte> stream
-   */
+ /**
+  * writes the byte stream to the serial connection
+  *
+  * @param ArrayList<Byte> stream
+  */
   void write(ArrayList<Byte> stream) {
     if (this.port != null) {
       print("sending: ");
@@ -158,5 +171,4 @@ class SerialConnection {
       println("");
     }
   }
-  
 }

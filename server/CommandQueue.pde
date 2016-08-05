@@ -2,10 +2,21 @@ import java.nio.ByteBuffer;
 
 
 class CommandQueue {
+ /** 
+  * reference to the Serial connection to the robot
+  */
   private SerialConnection conn;
 
+ /**
+  * queue of commands going to the robot
+  */
   private ArrayList<ArrayList<Byte>> commandQueue;
+  
+ /**
+  * queue of responses from the robot
+  */
   private ArrayList<String> inputQueue;
+  
   /** 
    * the cmd*() functions will store the raw parameters in this buffer to
    * allow access to the values again once the confirmation from the robot
@@ -26,7 +37,11 @@ class CommandQueue {
   final static char CMD_SONARPING    = 'p';
   final static char CMD_SONARSWEEP   = 's';
   
-  
+ /**
+  * constructor
+  *
+  * @param SerialConnection c
+  */
   CommandQueue(SerialConnection c) {
     this.commandQueue    = new ArrayList<ArrayList<Byte>>();
     this.inputQueue      = new ArrayList<String>();
@@ -35,34 +50,44 @@ class CommandQueue {
     this.lastCommand     = CommandQueue.CMD_NOOP;
     this.cmdProcessed    = true;
   }
-  
+
+ /**
+  * returns the number of commands queued to be sent to the robot
+  *
+  * @return int
+  */
   int getCommandQueueSize() {
     return this.commandQueue.size();
   }
   
+ /** 
+  * returns the number of responses from the robot that have yet to be processed
+  *
+  * @return int
+  */
   int getInputQueueSize() {
     return this.inputQueue.size();
   }
   
-  /**
-   * call this from draw()
-   *
-   * will fetch all incoming data and store it in the input queue.
-   *
-   * after that both the input and the command queues are processed
-   */
+ /**
+  * call this from draw()
+  *
+  * will fetch all incoming data and store it in the input queue.
+  *
+  * after that both the input and the command queues are processed
+  */
   void processQueues() {
     this.readFromSerial();
     this.processInputQueue();
     this.processCommandQueue();
   }
 
-  /**
-   * reads the input stream from the serial connection 
-   * and fills the inputQueue
-   *
-   * no input processing is performed
-   */
+ /**
+  * reads the input stream from the serial connection 
+  * and fills the inputQueue
+  *
+  * no input processing is performed
+  */
   private void readFromSerial() {
     String response;
     
@@ -75,9 +100,9 @@ class CommandQueue {
     } while(!"".equals(response));
   }
   
-  /** 
-   * processes every entry in the input queue
-   */
+ /** 
+  * processes every entry in the input queue
+  */
   private void processInputQueue() {
     String response;
     String[] list;
@@ -114,25 +139,14 @@ class CommandQueue {
     }
   }
   
-  /**
-   * if the serial connection is free the oldest
-   * command is sent
-   */
+ /**
+  * if the serial connection is free the oldest
+  * command is sent
+  */
   private void processCommandQueue() {    
     ArrayList<Byte> cmdString;
     byte cmd;
     
-    /*
-    if (this.commandQueue.size() > 0) {
-      println(this.commandQueue.size() + " commands in the queue");
-      
-      for (int i = 0; i < this.commandQueue.size(); i++) {
-        println(this.commandQueue.get(i));
-      }
-      
-      println("-----------");
-    }
-    */
     if (this.commandQueue.size() > 0 && this.cmdProcessed) {
       cmdString = this.commandQueue.remove(0);
       cmd       = (byte) cmdString.get(1);
@@ -145,15 +159,15 @@ class CommandQueue {
     }
   }
   
-  /**
-   * adds the given command with its parameters to the queue.
-   *
-   * returns true if the command was valid, false otherwise
-   *
-   * @param char cmd
-   * @param Object... params
-   * @return boolean
-   */
+ /**
+  * adds the given command with its parameters to the queue.
+  *
+  * returns true if the command was valid, false otherwise
+  *
+  * @param char cmd
+  * @param Object... params
+  * @return boolean
+  */
   boolean addCommand(char cmd, Object... params) {
     boolean retval = false;
     Integer i, x, y, a, b, s;
@@ -216,12 +230,12 @@ class CommandQueue {
   
   
   
-  /**
-   * converts each of the parameters into a representation that is transmittable over Serial
-   *
-   * @param Object... objects
-   * @return String
-   */
+ /**
+  * converts each of the parameters into a representation that is transmittable over Serial
+  *
+  * @param Object... objects
+  * @return String
+  */
   private ArrayList<Byte> serialize(Object... objects) {
     ArrayList<Byte> retval = new ArrayList<Byte>();
     byte[] tmp;
@@ -261,13 +275,12 @@ class CommandQueue {
     return retval;    
   }
   
-
-  /**
-   * converts a Java int to four bytes and sends those individually, MSB first
-   *
-   * @param int number
-   * @return byte[]
-   */
+ /**
+  * converts a Java int to four bytes and sends those individually, MSB first
+  *
+  * @param int number
+  * @return byte[]
+  */
   private byte[] makeSerialInt(int number) {
     byte[] i = new byte[] {0,0,0,0};
     
@@ -279,23 +292,23 @@ class CommandQueue {
     return i;    
   }
     
-  /**
-   * converts a Java float to four bytes and sends those individually, MSB first
-   *
-   * @param int number
-   * @return byte[]
-   */
-    private byte[] makeSerialFloat(float number) {
+ /**
+  * converts a Java float to four bytes and sends those individually, MSB first
+  *
+  * @param int number
+  * @return byte[]
+  */
+  private byte[] makeSerialFloat(float number) {
     return ByteBuffer.allocate(4).putFloat(number).array();
   }
   
-  /**
-   * converts a Java String into its byte representation and sends those individually
-   *
-   * @param String text
-   * @return String
-   */
-    private byte[] makeSerialString(String text) {
+ /**
+  * converts a Java String into its byte representation and sends those individually
+  *
+  * @param String text
+  * @return String
+  */
+  private byte[] makeSerialString(String text) {
     int len = text.length();
     byte[] s = new byte[len];
     
@@ -306,39 +319,53 @@ class CommandQueue {
     return s;
   }    
   
+ /**
+  * converts a float encapsulated in a string back to a float primitive
+  *
+  * @param String text
+  * @return float
+  */
   private float convertStringToFloat(String text) {
     return this.convertBytesToFloat(this.convertStringToBytes(text));
   }
   
+ /**
+  * converts a float encapsulated in a string back to a float primitive
+  *
+  * @param String text
+  * @return int
+  */
   private int convertStringToInt(String text) {
     return this.convertBytesToInt(this.convertStringToBytes(text));
   }
-  
+ 
+ /**
+  * converts a string to an array of byte
+  *
+  * @param String text
+  * @return byte[]
+  */
   private byte[] convertStringToBytes(String text) {
     return text.getBytes();
   }
   
-  /**
-   * converts a four byte representation of a integer into a int primitive
-   *
-   * SHOULD NOT BE NECESSARY TO CALL THIS FROM HI-LEVEL FUNCTIONS
-   *
-   * @param byte[] b     expects a 4 byte array
-   * @return int
-   */
+ /**
+  * converts a four byte representation of a integer into a int primitive
+  *
+  * @param byte[] b     expects a 4 byte array
+  * @return int
+  */
   private int convertBytesToInt(byte[] b) {
     byte[] f = new byte[]{b[0], b[1], b[2], b[3]};
     return ByteBuffer.wrap(f).getInt();
   }
   
-  /**
-   * converts a four byte representation of a float into a float primitive
-   *
-   * SHOULD NOT BE NECESSARY TO CALL THIS FROM HI-LEVEL FUNCTIONS
-   *
-   * @param byte[] b     expects a 4 byte array
-   * @return float
-   */
+ /**
+  * converts a four byte representation of a float into a float primitive
+  *
+  * @param byte[] b     expects a 4 byte array
+  * @return float
+  */
   private float convertBytesToFloat(byte[] b) {
     byte[] f = new byte[]{b[0], b[1], b[2], b[3]};
     return ByteBuffer.wrap(f).getFloat();
@@ -352,11 +379,11 @@ class CommandQueue {
   
   
   
-  /**
-   * sends the request for battery voltage to the m3pi
-   *
-   * @return boolean
-   */
+ /**
+  * sends the request for battery voltage to the m3pi
+  *
+  * @return boolean
+  */
   private boolean cmdBattery() {
     ArrayList<Integer> params = new ArrayList<Integer>();
     this.parameterBuffer.add(params);
@@ -375,12 +402,12 @@ class CommandQueue {
     return true;
   }
   
-  /**
-   * sends the request to turn left by a number of degrees
-   *
-   * @param int angle
-   * @return boolean
-   */
+ /**
+  * sends the request to turn left by a number of degrees
+  *
+  * @param int angle
+  * @return boolean
+  */
   private boolean cmdTurnLeft(int angle) {
     ArrayList<Integer> params = new ArrayList<Integer>();
     params.add(angle);
@@ -401,12 +428,12 @@ class CommandQueue {
     return true;
   }
   
-  /**
-   * sends the request to turn right by a number of degrees
-   *
-   * @param int angle
-   * @return boolean
-   */
+ /**
+  * sends the request to turn right by a number of degrees
+  *
+  * @param int angle
+  * @return boolean
+  */
   private boolean cmdTurnRight(int angle) {
     ArrayList<Integer> params = new ArrayList<Integer>();
     params.add(angle);
@@ -427,12 +454,12 @@ class CommandQueue {
     return true;
   }
   
-  /**
-   * sends the request to move forward by a number of millimeters
-   *
-   * @param int distance
-   * @return boolean
-   */
+ /**
+  * sends the request to move forward by a number of millimeters
+  *
+  * @param int distance
+  * @return boolean
+  */
   private boolean cmdMoveForward(int distance) {
     ArrayList<Integer> params = new ArrayList<Integer>();
     params.add(distance);
@@ -453,12 +480,12 @@ class CommandQueue {
     return true;
   }
   
-  /**
-   * sends the request to move backward by a number of millimeters
-   *
-   * @param int distance
-   * @return boolean
-   */
+ /**
+  * sends the request to move backward by a number of millimeters
+  *
+  * @param int distance
+  * @return boolean
+  */
   private boolean cmdMoveBackward(int distance) {
     ArrayList<Integer> params = new ArrayList<Integer>();
     params.add(distance);
@@ -479,11 +506,11 @@ class CommandQueue {
     return true;
   }
   
-  /**
-   * sends the request to clear the LCD screen on the m3pi
-   *
-   * @return boolean
-   */
+ /**
+  * sends the request to clear the LCD screen on the m3pi
+  *
+  * @return boolean
+  */
   private boolean cmdLcdClear() {
     ArrayList<Integer> params = new ArrayList<Integer>();
     this.parameterBuffer.add(params);
@@ -502,15 +529,15 @@ class CommandQueue {
     return true;
   }
   
-  /**
-   * sends the request to write the given text on the x/y position provided
-   * onto the LCD of the m3pi
-   *
-   * @param int x
-   * @param int y
-   * @param String text
-   * @return boolean
-   */
+ /**
+  * sends the request to write the given text on the x/y position provided
+  * onto the LCD of the m3pi
+  *
+  * @param int x
+  * @param int y
+  * @param String text
+  * @return boolean
+  */
   private boolean cmdLcdWrite(int x, int y, String text) {
     ArrayList<Integer> params = new ArrayList<Integer>();
     params.add(x);
@@ -536,14 +563,13 @@ class CommandQueue {
     return true;
   }
   
-  
-  /**
-   * sends the request to perform a ranging 'ping' into the given
-   * direction
-   *
-   * @param int angle
-   * @return boolean
-   */
+ /**
+  * sends the request to perform a ranging 'ping' into the given
+  * direction
+  *
+  * @param int angle
+  * @return boolean
+  */
   private boolean cmdSonarPing(int angle) {  
     ArrayList<Integer> params = new ArrayList<Integer>();
     params.add(angle);
@@ -564,15 +590,15 @@ class CommandQueue {
     return true;
   }
   
-  /**
-   * sends the request to perform a series of sonar ranging 'pings' from
-   * startAngle to endAngle with stepSize angles intervals
-   *
-   * @param int startAngle
-   * @param int endAngle
-   * @param int stepSize
-   * @return boolean
-   */
+ /**
+  * sends the request to perform a series of sonar ranging 'pings' from
+  * startAngle to endAngle with stepSize angles intervals
+  *
+  * @param int startAngle
+  * @param int endAngle
+  * @param int stepSize
+  * @return boolean
+  */
   private boolean cmdSonarSweep(int startAngle, int endAngle, int stepSize) {
     ArrayList<Integer> params = new ArrayList<Integer>();
     params.add(startAngle);
@@ -607,7 +633,11 @@ class CommandQueue {
   
   
   
-    
+ /** 
+  * performs the necessary steps after the robot has confirmed command completion
+  *
+  * @param String[] list response data array
+  */
   void processCmdCompletion(String[] list) {
     ArrayList<Integer> buffer;
     
@@ -628,6 +658,11 @@ class CommandQueue {
     }
   }
   
+ /**
+  * updates the battery voltage after the robot has replied
+  *
+  * @param String[] list response data array
+  */
   void processCmdBatteryResponse(String[] list) {
     if (list[0].charAt(1) == 'B') {
       float v = this.convertStringToFloat(list[1]);
@@ -636,6 +671,11 @@ class CommandQueue {
     }
   }
   
+ /**
+  * updates the virtual landscape after the robot has replied with ping data
+  *
+  * @param String[] list response data array
+  */
   void processCmdSonarPingResponse(String[] list) {  
     if (list[0].charAt(1) == 'P') {
       int angle = this.convertStringToInt(list[1]);

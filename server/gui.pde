@@ -31,14 +31,17 @@ boolean helpWindowVisibility = false;
 boolean rotationCueVisibility = false;
 boolean moveCueVisibility = false;
 
-
+/**
+ * basic setup of graphical stuff
+ */
 void guiInit() {
   colorMode(RGB, 255, 255, 255, 100);
   ellipseMode(RADIUS);
-  
-  //initButtons();
 }
 
+/** 
+ * updates everything on the GUI
+ */
 void guiRefresh() {  
   background(0, 0, 0, 100);
   
@@ -51,23 +54,9 @@ void guiRefresh() {
   drawHelp();
 }
 
-void initButtons() {
-  color(0, 0, 0);
-  noStroke();
-  fill(0, 160, 0);
-  textSize(20);
-  
-  drawButton(buttonStartX, batteryButtonStartY, buttonLength, buttonHeight, "battery");
-  drawButton(buttonStartX, turnLeftButtonStartY, buttonLength, buttonHeight, "turn left");
-  drawButton(buttonStartX, turnRightButtonStartY, buttonLength, buttonHeight, "turn right");
-  drawButton(buttonStartX, moveFwdButtonStartY, buttonLength, buttonHeight, "move fwd");
-  drawButton(buttonStartX, moveBackButtonStartY, buttonLength, buttonHeight, "move back");
-  drawButton(buttonStartX, lcdClearButtonStartY, buttonLength, buttonHeight, "clear LCD");
-  drawButton(buttonStartX, lcdWriteButtonStartY, buttonLength, buttonHeight, "write on LCD");
-  drawButton(buttonStartX, sonarPingButtonStartY, buttonLength, buttonHeight, "sonar ping");
-  drawButton(buttonStartX, sonarSweepButtonStartY, buttonLength, buttonHeight, "sonar sweep");  
-}
-
+/** 
+ * draws the 'home plate' at the position where the robot started initially
+ */
 void drawHome() {
   float radius = scaleMMtoPx(HOME_RADIUS);
   
@@ -92,6 +81,9 @@ void drawHome() {
   );
 }
 
+/** 
+ * draws some statistics in the top left
+ */
 void drawHUD() {
   rectMode(CORNER);
   color(0, 160, 0);
@@ -107,6 +99,9 @@ void drawHUD() {
   text("scroll: " + round(scrollX) + " / " + round(scrollY), 10, 80);
 }
 
+/** 
+ * draws a help 'popup' after the user has pressed the 'h' key
+ */
 void drawHelp() {
   int width = 300;
   int height = 150;
@@ -135,6 +130,10 @@ void drawHelp() {
   }
 }
 
+/** 
+ * draws cues for rotation and movement if the user
+ * holds down the 'r' (rotation) or 'm' (movement) keys.
+ */
 void drawCues() {
   int mX = mouseX;
   int mY = mouseY;
@@ -179,18 +178,6 @@ void drawCues() {
 
 
 
-void drawButton(int startX, int startY, int length, int height, String text) {
-  color(0, 0, 0);
-  fill(0, 160, 0);
-  textSize(20);
-  
-  rect(startX, startY, length, height);
-  fill(0, 0, 0);
-  text(text, startX + 10, startY + height - 12);
-}
-
-  
-
 
 
 
@@ -221,7 +208,11 @@ float scalePxToMM(float px) {
 
 
 
-
+/**
+ * event handler for key presses
+ *
+ * doesn't trigger commands to the robot but initiates the help popup and movement cues
+ */
 void keyPressed() {
   switch (key) {
     case 'c':
@@ -249,6 +240,9 @@ void keyPressed() {
   }
 }
 
+/**
+ * triggers the sonarSweep and battery commands for the robot
+ */
 void keyReleased() {
   switch (key) {
     case 'r':
@@ -300,6 +294,11 @@ void mouseDragged(MouseEvent event) {
   }
 }
 
+/** 
+ * triggers the rotation and movement commands 
+ *
+ * @param MouseEvent event
+ */
 void mouseClicked(MouseEvent event) {
   int mX = mouseX;
   int mY = mouseY;
