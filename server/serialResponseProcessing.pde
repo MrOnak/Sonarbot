@@ -7,8 +7,9 @@ void processCmdCompletion(String[] list) {
 
 void processCmdBatteryResponse(String[] list) {
   if (list[0].charAt(1) == 'B') {
-    float mV = convertStringToFloat(list[1]);
-    println(mV);
+    float v = convertStringToFloat(list[1]);
+    println(v);
+    bot.setVoltage(v);
   }
 }
 

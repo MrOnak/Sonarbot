@@ -6,20 +6,6 @@ import java.nio.ByteBuffer;
 
 Serial m3piPort;                               // Serial connection to the bot
 
-int buttonStartX = 10;
-int buttonLength = 200;
-int buttonHeight = 40;
-
-int batteryButtonStartY = 10;
-int turnLeftButtonStartY = 60;
-int turnRightButtonStartY = 110;
-int moveFwdButtonStartY = 160;
-int moveBackButtonStartY = 210;
-int lcdClearButtonStartY = 260;
-int lcdWriteButtonStartY = 310;
-int sonarPingButtonStartY = 360;
-int sonarSweepButtonStartY = 410;
-
 final char CMD_NOOP = ' ';
 final char CMD_BATTERY = 'b';
 final char CMD_TURNLEFT = 'l';
@@ -34,8 +20,11 @@ final char CMD_SONARSWEEP = 's';
 
 char command;
 
+SonarBot bot = new SonarBot(0, 0, 0.0, 5.0);
+Landscape grid = new Landscape(1001, 1001);
+
 void setup() {
-  size(500, 500);
+  size(1000, 1000);
   
   if (Serial.list().length > 0) {
     String portName = Serial.list()[0]; //change the 0 to a 1 or 2 etc. to match your port
@@ -46,10 +35,11 @@ void setup() {
   
   command = CMD_NOOP;
   
-  initGui();
+  guiInit();
 }
 
 void draw() {
+  guiRefresh();
   getSerialData();
 }
 
