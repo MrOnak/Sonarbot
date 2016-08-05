@@ -53,8 +53,8 @@ class Landscape {
     int cellsX = ceil(windowWidth / edgeLen);
     int cellsY = ceil(windowHeight / edgeLen);
 
-    float centerCellX = this.gridCenterX + (bot.getPosX() / this.CELL_SIZE) - (scalePxToMM(scrollX) / this.CELL_SIZE);
-    float centerCellY = this.gridCenterY + (bot.getPosY() / this.CELL_SIZE) - (scalePxToMM(scrollY) / this.CELL_SIZE);
+    float centerCellX = this.gridCenterX - (scalePxToMM(scrollX) / this.CELL_SIZE);
+    float centerCellY = this.gridCenterY - (scalePxToMM(scrollY) / this.CELL_SIZE);
     
     float startCellX = centerCellX - cellsX / 2;
     float startCellY = centerCellY - cellsY / 2;
