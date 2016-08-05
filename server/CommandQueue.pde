@@ -15,16 +15,16 @@ class CommandQueue {
   char lastCommand;
   private boolean cmdProcessed;
     
-  final char CMD_NOOP = ' ';
-  final char CMD_BATTERY = 'b';
-  final char CMD_TURNLEFT = 'l';
-  final char CMD_TURNRIGHT = 'r';
-  final char CMD_MOVEFORWARD = 'f';
-  final char CMD_MOVEBACKWARD = 'e';
-  final char CMD_LCDCLEAR = 'c';
-  final char CMD_LCDWRITE = 'w';
-  final char CMD_SONARPING = 'p';
-  final char CMD_SONARSWEEP = 's';
+  final static char CMD_NOOP         = ' ';
+  final static char CMD_BATTERY      = 'b';
+  final static char CMD_TURNLEFT     = 'l';
+  final static char CMD_TURNRIGHT    = 'r';
+  final static char CMD_MOVEFORWARD  = 'm';
+  final static char CMD_MOVEBACKWARD = 'e';
+  final static char CMD_LCDCLEAR     = 'c';
+  final static char CMD_LCDWRITE     = 'w';
+  final static char CMD_SONARPING    = 'p';
+  final static char CMD_SONARSWEEP   = 's';
   
   
   CommandQueue(SerialConnection c) {
@@ -32,7 +32,7 @@ class CommandQueue {
     this.inputQueue      = new ArrayList<String>();
     this.parameterBuffer = new ArrayList<ArrayList<Integer>>();
     this.conn            = c;
-    this.lastCommand     = this.CMD_NOOP;
+    this.lastCommand     = CommandQueue.CMD_NOOP;
     this.cmdProcessed    = true;
   }
   
@@ -93,18 +93,18 @@ class CommandQueue {
         println("last command: " + this.lastCommand);
         
         switch (this.lastCommand) {
-          case CMD_BATTERY:
+          case CommandQueue.CMD_BATTERY:
             processCmdBatteryResponse(list);
             break;
-          case CMD_TURNLEFT:
-          case CMD_TURNRIGHT:
-          case CMD_MOVEFORWARD:
-          case CMD_MOVEBACKWARD:
-          case CMD_LCDCLEAR:
-          case CMD_LCDWRITE:
+          case CommandQueue.CMD_TURNLEFT:
+          case CommandQueue.CMD_TURNRIGHT:
+          case CommandQueue.CMD_MOVEFORWARD:
+          case CommandQueue.CMD_MOVEBACKWARD:
+          case CommandQueue.CMD_LCDCLEAR:
+          case CommandQueue.CMD_LCDWRITE:
             break;
-          case CMD_SONARPING:
-          case CMD_SONARSWEEP:
+          case CommandQueue.CMD_SONARPING:
+          case CommandQueue.CMD_SONARSWEEP:
             processCmdSonarPingResponse(list);
             break;          
         }
@@ -122,6 +122,7 @@ class CommandQueue {
     ArrayList<Byte> cmdString;
     byte cmd;
     
+    /*
     if (this.commandQueue.size() > 0) {
       println(this.commandQueue.size() + " commands in the queue");
       
@@ -131,22 +132,14 @@ class CommandQueue {
       
       println("-----------");
     }
-    
+    */
     if (this.commandQueue.size() > 0 && this.cmdProcessed) {
       cmdString = this.commandQueue.remove(0);
       cmd       = (byte) cmdString.get(1);
       
       println("sending command " + (char) cmd);
       this.lastCommand = (char) cmd;
-      
-      if (this.lastCommand == this.CMD_TURNLEFT 
-          || this.lastCommand == this.CMD_TURNRIGHT) {
-            
-      } else if (this.lastCommand == this.CMD_MOVEFORWARD) {
-      
-      }
-      
-      
+                  
       this.conn.write(cmdString);
       this.cmdProcessed = false;
     }
@@ -167,47 +160,47 @@ class CommandQueue {
     String t;
     
     switch(cmd) {
-      case 'b': //this.CMD_BATTERY
+      case CommandQueue.CMD_BATTERY:
         retval = this.cmdBattery();
         break;
 
-      case 'l': //this.CMD_TURNLEFT
+      case CommandQueue.CMD_TURNLEFT:
         i = (Integer) params[0];
         retval = this.cmdTurnLeft(i.intValue());
         break;
         
-      case 'r': //this.CMD_TURNRIGHT
+      case CommandQueue.CMD_TURNRIGHT:
         i = (Integer) params[0];
         retval = this.cmdTurnRight(i.intValue());
         break;
         
-      case 'f': //this.CMD_MOVEFORWARD
+      case CommandQueue.CMD_MOVEFORWARD:
         i = (Integer) params[0];
         retval = this.cmdMoveForward(i.intValue());
         break;
         
-      case 'e': //this.CMD_MOVEBACKWARD
+      case CommandQueue.CMD_MOVEBACKWARD:
         i = (Integer) params[0];
         retval = this.cmdMoveBackward(i.intValue());
         break;
         
-      case 'c': //this.CMD_LCDCLEAR
+      case CommandQueue.CMD_LCDCLEAR:
         retval = this.cmdLcdClear(); 
         break;
         
-      case 'w': //this.CMD_LCDWRITE
+      case CommandQueue.CMD_LCDWRITE:
         x = (Integer) params[0];
         y = (Integer) params[1];
         t = (String)  params[2];
         retval = this.cmdLcdWrite(x.intValue(), y.intValue(), t);
         break;
         
-      case 'p': //this.CMD_SONARPING
+      case CommandQueue.CMD_SONARPING:
         i = (Integer) params[0];
         retval = this.cmdSonarPing(i.intValue());
         break;
         
-      case 's': //this.CMD_SONARSWEEP
+      case CommandQueue.CMD_SONARSWEEP:
         a = (Integer) params[0];
         b = (Integer) params[1];
         s = (Integer) params[2];
@@ -235,12 +228,10 @@ class CommandQueue {
     
     for (Object o : objects) {
       if (o.getClass().equals(Integer.class)) {
-        //println("...integer");
         Integer i = (Integer) o;
         tmp = this.makeSerialInt(i.intValue());
         
       } else if (o.getClass().equals(Float.class)) {
-        //println("...float");
         Float f = (Float) o;
         tmp = this.makeSerialFloat(f.floatValue());
       
@@ -248,11 +239,14 @@ class CommandQueue {
         tmp = new byte[] {(byte) o};
         
       } else if (o.getClass().equals(String.class)) {
-        //println("...string");
         tmp = this.makeSerialString((String) o);
         
+      } else if (o.getClass().equals(Character.class)) {
+        Character c = (Character) o;
+        tmp = new byte[]{(byte) c.charValue()};
+        
       } else {
-        println("...unrecognized type");
+        println("unrecognized type for serialization");
         tmp = null;
       }
       
@@ -367,7 +361,16 @@ class CommandQueue {
     ArrayList<Integer> params = new ArrayList<Integer>();
     this.parameterBuffer.add(params);
     
-    this.commandQueue.add(this.serialize("#b:\n"));
+    this.commandQueue.add(
+      this.serialize(
+        new StringBuilder("")
+          .append(SerialConnection.SRLCMD_CHAR_START)
+          .append(CommandQueue.CMD_BATTERY)
+          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
+          .append(SerialConnection.SRLCMD_CHAR_END)
+          .toString()
+      )
+    );
  
     return true;
   }
@@ -383,7 +386,17 @@ class CommandQueue {
     params.add(angle);
     this.parameterBuffer.add(params);
     
-    this.commandQueue.add(this.serialize("#l:", angle, "\n"));
+    this.commandQueue.add(
+      this.serialize(
+        new StringBuilder("")
+          .append(SerialConnection.SRLCMD_CHAR_START)
+          .append(CommandQueue.CMD_TURNLEFT)
+          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
+          .toString(),
+        angle, 
+        SerialConnection.SRLCMD_CHAR_END
+      )
+    );
     
     return true;
   }
@@ -399,7 +412,17 @@ class CommandQueue {
     params.add(angle);
     this.parameterBuffer.add(params);
     
-    this.commandQueue.add(this.serialize("#r:", angle, "\n"));
+    this.commandQueue.add(
+      this.serialize(
+        new StringBuilder("")
+          .append(SerialConnection.SRLCMD_CHAR_START)
+          .append(CommandQueue.CMD_TURNRIGHT)
+          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
+          .toString(), 
+        angle, 
+        SerialConnection.SRLCMD_CHAR_END
+      )
+    );
     
     return true;
   }
@@ -415,7 +438,17 @@ class CommandQueue {
     params.add(distance);
     this.parameterBuffer.add(params);
     
-    this.commandQueue.add(this.serialize("#m:", distance, "\n"));
+    this.commandQueue.add(
+      this.serialize(
+        new StringBuilder("")
+          .append(SerialConnection.SRLCMD_CHAR_START)
+          .append(CommandQueue.CMD_MOVEFORWARD)
+          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
+          .toString(), 
+        distance, 
+        SerialConnection.SRLCMD_CHAR_END
+      )
+    );
     
     return true;
   }
@@ -431,7 +464,17 @@ class CommandQueue {
     params.add(distance);
     this.parameterBuffer.add(params);
     
-    this.commandQueue.add(this.serialize("#e:", distance, "\n"));
+    this.commandQueue.add(
+      this.serialize(
+        new StringBuilder("")
+          .append(SerialConnection.SRLCMD_CHAR_START)
+          .append(CommandQueue.CMD_MOVEBACKWARD)
+          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
+          .toString(), 
+        distance, 
+        SerialConnection.SRLCMD_CHAR_END
+      )
+    );
     
     return true;
   }
@@ -445,7 +488,16 @@ class CommandQueue {
     ArrayList<Integer> params = new ArrayList<Integer>();
     this.parameterBuffer.add(params);
     
-    this.commandQueue.add(this.serialize("#c:\n"));
+    this.commandQueue.add(
+      this.serialize(
+        new StringBuilder("")
+          .append(SerialConnection.SRLCMD_CHAR_START)
+          .append(CommandQueue.CMD_LCDCLEAR)
+          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
+          .append(SerialConnection.SRLCMD_CHAR_END)
+          .toString()        
+      )
+    );
     
     return true;
   }
@@ -465,7 +517,21 @@ class CommandQueue {
     params.add(y);
     this.parameterBuffer.add(params);
     
-    this.commandQueue.add(this.serialize("#w:", x, ",", y, ",", text, "\n"));
+    this.commandQueue.add(
+      this.serialize(
+        new StringBuilder("")
+          .append(SerialConnection.SRLCMD_CHAR_START)
+          .append(CommandQueue.CMD_LCDWRITE)
+          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
+          .toString(), 
+        x, 
+        SerialConnection.SRLCMD_CHAR_PAYLOADSEP, 
+        y, 
+        SerialConnection.SRLCMD_CHAR_PAYLOADSEP, 
+        text, 
+        SerialConnection.SRLCMD_CHAR_END
+      )
+    );
     
     return true;
   }
@@ -483,7 +549,17 @@ class CommandQueue {
     params.add(angle);
     this.parameterBuffer.add(params);
     
-    this.commandQueue.add(this.serialize("#p:", angle, "\n"));
+    this.commandQueue.add(
+      this.serialize(
+        new StringBuilder("")
+          .append(SerialConnection.SRLCMD_CHAR_START)
+          .append(CommandQueue.CMD_SONARPING)
+          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
+          .toString(), 
+        angle, 
+        SerialConnection.SRLCMD_CHAR_END
+      )
+    );
     
     return true;
   }
@@ -504,7 +580,21 @@ class CommandQueue {
     params.add(stepSize);
     this.parameterBuffer.add(params);
     
-    this.commandQueue.add(this.serialize("#s:", startAngle, ",", endAngle, ",", byte(stepSize), "\n"));
+    this.commandQueue.add(
+      this.serialize(
+        new StringBuilder("")
+          .append(SerialConnection.SRLCMD_CHAR_START)
+          .append(CommandQueue.CMD_SONARSWEEP)
+          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
+          .toString(), 
+        startAngle, 
+        SerialConnection.SRLCMD_CHAR_PAYLOADSEP,
+        endAngle, 
+        SerialConnection.SRLCMD_CHAR_PAYLOADSEP, 
+        byte(stepSize), 
+        SerialConnection.SRLCMD_CHAR_END
+      )
+    );
     
     return true;
   }  
@@ -525,15 +615,15 @@ class CommandQueue {
       println("processing for command " + this.lastCommand + " complete");
       buffer = this.parameterBuffer.remove(0);
       
-      if (this.lastCommand == this.CMD_TURNLEFT
-          || this.lastCommand == this.CMD_TURNRIGHT) {
+      if (this.lastCommand == CommandQueue.CMD_TURNLEFT
+          || this.lastCommand == CommandQueue.CMD_TURNRIGHT) {
         bot.rotate(buffer.get(0).intValue());
             
-      } else if (this.lastCommand == this.CMD_MOVEFORWARD) {
+      } else if (this.lastCommand == CommandQueue.CMD_MOVEFORWARD) {
         
       }
       
-      this.lastCommand = this.CMD_NOOP;
+      this.lastCommand = CommandQueue.CMD_NOOP;
       this.cmdProcessed = true;
     }
   }
@@ -552,11 +642,11 @@ class CommandQueue {
       int range = this.convertStringToInt(list[2]);
       println("angle: "+ angle + " range: " + range);
       
-      if (this.lastCommand == this.CMD_SONARPING) {
-        this.lastCommand = this.CMD_NOOP;
+      if (this.lastCommand == CommandQueue.CMD_SONARPING) {
+        this.lastCommand = CommandQueue.CMD_NOOP;
       }
-    } else if (list[0].charAt(1) == 'K' && this.lastCommand == this.CMD_SONARSWEEP) {
-      this.lastCommand = this.CMD_NOOP;
+    } else if (list[0].charAt(1) == 'K' && this.lastCommand == CommandQueue.CMD_SONARSWEEP) {
+      this.lastCommand = CommandQueue.CMD_NOOP;
     }
   }
 }

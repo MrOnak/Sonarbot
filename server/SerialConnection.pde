@@ -3,7 +3,17 @@ import processing.serial.*;
 class SerialConnection {
   Serial port;
   ArrayList<String> inputBuffer;
+  
+  /** 
+   * byte-stream from the robot. 
+   *
+   * this variable is being filled from the serialEvent() callback in the main applet
+   */
   String currentBuffer;
+  
+  /**
+   * buffer-in-progress. This is continuously being worked on as SerialConnection.processSerial() is called
+   */
   String processingBuffer;
   
   private static final char SRLCMD_CHAR_START = '#';
@@ -62,7 +72,6 @@ class SerialConnection {
     
     // only read Serial data when there is no current command
     if (this.currentBuffer.length() > 0) {
-      println(this.currentBuffer.length() + " bytes available over Serial. current state is " + this.cmdState + ", processingBuffer is '" + this.processingBuffer + "'");
           
       inChar = this.currentBuffer.charAt(0);
       this.currentBuffer = this.currentBuffer.substring(1);
