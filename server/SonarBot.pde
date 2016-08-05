@@ -73,6 +73,16 @@ class SonarBot {
   }
   
   /**
+   * updates the bots position (posX, posY) after moving the given distance
+   *
+   * @param int distance
+   */
+  void move(int distance) {
+    this.posX += int(distance * cos(radians(this.angle)));
+    this.posY += int(distance * sin(radians(this.angle)));    
+  }
+  
+  /**
    * @return rotation of the bot in degrees
    */
   float getAngle() {
