@@ -67,7 +67,7 @@ class CommandQueue {
     String response;
     
     do {
-      response = conn.processData();
+      response = conn.readResponse();
       
       if (!"".equals(response)) {
         this.inputQueue.add(response);
