@@ -87,6 +87,15 @@ class SonarBot {
   }
   
   /**
+   * adds a rotation to the current angle
+   *
+   * @param float a
+   */
+  void rotate(float a) {
+    this.angle += a;
+  }
+  
+  /**
    * @return battery capacity of the bot in V
    */
   float getVoltage() {
