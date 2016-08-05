@@ -206,17 +206,8 @@ void reportBattery(float voltage) {
     v.f = voltage;
     
     wixel.printf("#B:%c%c%c%c\n", v.c[3], v.c[2], v.c[1], v.c[0]); 
-    reportCmdComplete();
 }
 
-/** 
- * sent after the serial connection has been reset
- */
-void reportSerialReset() {
-    wixel.printf("#RST\n");
-}
-    
-    
     
     
     
@@ -230,6 +221,8 @@ void reportSerialReset() {
 void cmdBattery() {
     batteryVoltage = m3pi.battery();
     reportBattery(batteryVoltage);
+    
+    reportCmdComplete();
 }
 
 /**
@@ -241,7 +234,7 @@ void cmdBattery() {
  */
 void cmdTurnLeft(int degrees) {
     m3pi.left(0.1);
-    wait_ms(TURNRATE_LEFT * degrees);         // @todo do the math to calculate travel distance by time and adjust delay accordingly
+    wait_ms(TURNRATE_LEFT * -1 * degrees);         // @todo do the math to calculate travel distance by time and adjust delay accordingly
     m3pi.stop();
         
     reportCmdComplete();
@@ -631,8 +624,6 @@ void resetWixelStart() {
 void resetWixelEnd() {
     led        = 0;
     wixelReset = 1;
-    
-    reportSerialReset();
 }
     
 
@@ -646,6 +637,11 @@ int main() {
     wixelResetButton.mode(PullUp);
     wixelResetButton.fall(&resetWixelStart);
     wixelResetButton.rise(&resetWixelEnd);
+    
+    wait(0.5);
+    resetWixelStart();
+    wait(0.2);
+    resetWixelEnd();
     
     wait(0.5);
     wixel.baud(115200);
