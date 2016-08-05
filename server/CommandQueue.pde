@@ -620,7 +620,7 @@ class CommandQueue {
         bot.rotate(buffer.get(0).intValue());
             
       } else if (this.lastCommand == CommandQueue.CMD_MOVEFORWARD) {
-        
+        bot.move(buffer.get(0).intValue());
       }
       
       this.lastCommand = CommandQueue.CMD_NOOP;
