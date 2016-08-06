@@ -25,6 +25,7 @@ class CommandQueue {
   private ArrayList<ArrayList<Integer>> parameterBuffer;
   char lastCommand;
   private boolean cmdProcessed;
+  private SerialCommandBuilder builder;
     
   final static char CMD_NOOP         = ' ';
   final static char CMD_BATTERY      = 'b';
@@ -49,6 +50,7 @@ class CommandQueue {
     this.conn            = c;
     this.lastCommand     = CommandQueue.CMD_NOOP;
     this.cmdProcessed    = true;
+    this.builder         = new SerialCommandBuilder();
   }
 
  /**
@@ -104,23 +106,21 @@ class CommandQueue {
   * processes every entry in the input queue
   */
   private void processInputQueue() {
-    String response;
-    String[] list;
+    SerialCommand responseCmd;
     
     if (this.getInputQueueSize() > 0) {
       println(this.inputQueue.size() + " lines in the input queue");
 
-      response = this.inputQueue.remove(0);
+      responseCmd = this.builder.parseFromString(
+                      this.inputQueue.remove(0));
       
-      if (!"".equals(response)) {
-        list = this.unserialize(response);
-
-        println("serial input: " + response);
+      if (responseCmd != null) {
+        println("serial input: " + responseCmd);
         println("last command: " + this.lastCommand);
         
         switch (this.lastCommand) {
           case CommandQueue.CMD_BATTERY:
-            processCmdBatteryResponse(list);
+            processCmdBatteryResponse(responseCmd);
             break;
           case CommandQueue.CMD_TURNLEFT:
           case CommandQueue.CMD_TURNRIGHT:
@@ -131,11 +131,11 @@ class CommandQueue {
             break;
           case CommandQueue.CMD_SONARPING:
           case CommandQueue.CMD_SONARSWEEP:
-            processCmdSonarPingResponse(list);
+            processCmdSonarPingResponse(responseCmd);
             break;          
         }
         
-        processCmdCompletion(list);
+        processCmdCompletion(responseCmd);
       }
     }
   }
@@ -374,58 +374,7 @@ class CommandQueue {
     
     return s;
   }    
-  
- /**
-  * converts a float encapsulated in a string back to a float primitive
-  *
-  * @param String text
-  * @return float
-  */
-  private float convertStringToFloat(String text) {
-    return this.convertBytesToFloat(this.convertStringToBytes(text));
-  }
-  
- /**
-  * converts a float encapsulated in a string back to a float primitive
-  *
-  * @param String text
-  * @return int
-  */
-  private int convertStringToInt(String text) {
-    return this.convertBytesToInt(this.convertStringToBytes(text));
-  }
- 
- /**
-  * converts a string to an array of byte
-  *
-  * @param String text
-  * @return byte[]
-  */
-  private byte[] convertStringToBytes(String text) {
-    return text.getBytes();
-  }
-  
- /**
-  * converts a four byte representation of a integer into a int primitive
-  *
-  * @param byte[] b     expects a 4 byte array
-  * @return int
-  */
-  private int convertBytesToInt(byte[] b) {
-    byte[] f = new byte[]{b[0], b[1], b[2], b[3]};
-    return ByteBuffer.wrap(f).getInt();
-  }
-  
- /**
-  * converts a four byte representation of a float into a float primitive
-  *
-  * @param byte[] b     expects a 4 byte array
-  * @return float
-  */
-  private float convertBytesToFloat(byte[] b) {
-    byte[] f = new byte[]{b[0], b[1], b[2], b[3]};
-    return ByteBuffer.wrap(f).getFloat();
-  }
+   
   
     
   
@@ -692,12 +641,12 @@ class CommandQueue {
  /** 
   * performs the necessary steps after the robot has confirmed command completion
   *
-  * @param String[] list response data array
+  * @param SerialCommand response
   */
-  void processCmdCompletion(String[] list) {
+  void processCmdCompletion(SerialCommand response) {
     ArrayList<Integer> buffer;
     
-    if (list[0].charAt(1) == SerialConnection.SRLRSP_CHAR_COMPLETE) {
+    if (response.getCmdChar() == SerialConnection.SRLRSP_CHAR_COMPLETE) {
       println("processing for command " + this.lastCommand + " complete");
       buffer = this.parameterBuffer.remove(0);
       
@@ -717,11 +666,11 @@ class CommandQueue {
  /**
   * updates the battery voltage after the robot has replied
   *
-  * @param String[] list response data array
+  * @param SerialCommand response
   */
-  void processCmdBatteryResponse(String[] list) {
-    if (list[0].charAt(1) == SerialConnection.SRLRSP_CHAR_BATTERY) {
-      float v = this.convertStringToFloat(list[1]);
+  void processCmdBatteryResponse(SerialCommand response) {
+    if (response.getCmdChar() == SerialConnection.SRLRSP_CHAR_BATTERY) {
+      float v = response.getParamAsFloat(0);
       println(v);
       bot.setVoltage(v);
     }
@@ -730,19 +679,17 @@ class CommandQueue {
  /**
   * updates the virtual landscape after the robot has replied with ping data
   *
-  * @param String[] list response data array
+  * @param SerialCommand response
   */
-  void processCmdSonarPingResponse(String[] list) {  
-    if (list[0].charAt(1) == SerialConnection.SRLRSP_CHAR_SONARPING) {
-      int angle = this.convertStringToInt(list[1]);
-      int range = this.convertStringToInt(list[2]);
+  void processCmdSonarPingResponse(SerialCommand response) {  
+    if (response.getCmdChar() == SerialConnection.SRLRSP_CHAR_SONARPING) {
+      int angle = response.getParamAsInt(0);
+      int range = response.getParamAsInt(1);
       println("angle: "+ angle + " range: " + range);
       
       if (this.lastCommand == CommandQueue.CMD_SONARPING) {
         this.lastCommand = CommandQueue.CMD_NOOP;
       }
-    } else if (list[0].charAt(1) == 'K' && this.lastCommand == CommandQueue.CMD_SONARSWEEP) {
-      this.lastCommand = CommandQueue.CMD_NOOP;
     }
   }
 }

@@ -145,6 +145,7 @@ class SerialConnection {
                 || (this.command == SerialConnection.SRLRSP_CHAR_SONARPING && this.payloadLength == SerialConnection.SRLRSP_PAYLOAD_SONARPING)) {
 
               // payload end has been reached, move current buffer to queue and reset
+              this.processingBuffer += inChar;
               this.inputBuffer.add(this.processingBuffer);
               this.processingBuffer = "";
               this.payloadLength    = 0;
