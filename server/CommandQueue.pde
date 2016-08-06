@@ -113,7 +113,8 @@ class CommandQueue {
       response = this.inputQueue.remove(0);
       
       if (!"".equals(response)) {
-        list = splitTokens(response, ":,\n");
+        list = this.unserialize(response);
+
         println("serial input: " + response);
         println("last command: " + this.lastCommand);
         
@@ -138,7 +139,7 @@ class CommandQueue {
       }
     }
   }
-  
+ 
  /**
   * if the serial connection is free the oldest
   * command is sent
@@ -228,7 +229,62 @@ class CommandQueue {
   }
   
   
-  
+ /** 
+  * splits the raw byte stream into the command byte and the associated parameters.
+  *
+  * @param String stream
+  * @return String[]
+  */
+  private String[] unserialize(String stream) {
+    String[] retval;
+    int params    = 0;
+    
+    // determine number of parameters based on command response byte
+    switch (stream.charAt(1)) {
+      case SerialConnection.SRLRSP_CHAR_COMPLETE:
+        params = SerialConnection.SRLRSP_PARAMS_COMPLETE;
+        retval = new String[params + 1];
+        retval[0] = new StringBuilder("")
+                      .append(SerialConnection.SRLCMD_CHAR_START)
+                      .append(SerialConnection.SRLRSP_CHAR_COMPLETE)
+                      .toString();
+        break;
+        
+      case SerialConnection.SRLRSP_CHAR_BATTERY:
+        params = SerialConnection.SRLRSP_PARAMS_BATTERY;
+        retval = new String[params + 1];
+        retval[0] = new StringBuilder("")
+                      .append(SerialConnection.SRLCMD_CHAR_START)
+                      .append(SerialConnection.SRLRSP_CHAR_BATTERY)
+                      .toString();
+        break;
+        
+      case SerialConnection.SRLRSP_CHAR_SONARPING:
+        params = SerialConnection.SRLRSP_PARAMS_SONARPING;
+        retval = new String[params + 1];
+        retval[0] = new StringBuilder("")
+                      .append(SerialConnection.SRLCMD_CHAR_START)
+                      .append(SerialConnection.SRLRSP_CHAR_SONARPING)
+                      .toString();
+        break;
+        
+      default:
+        println("unknown response command");
+        retval = null;
+    }
+    
+    // parameters can be parsed independent of command response byte now
+    for (int i = 0; i < params; i++) {
+      retval[1 + i] = "";
+      for (int b = 0; b < 4; b++) {
+        // 0123456789abc
+        // #P:abcd,efgh\n
+        retval[1 + i] += stream.charAt(3 + 5 * i + b);
+      }
+    }
+    
+    return retval;
+  }
   
  /**
   * converts each of the parameters into a representation that is transmittable over Serial
@@ -641,7 +697,7 @@ class CommandQueue {
   void processCmdCompletion(String[] list) {
     ArrayList<Integer> buffer;
     
-    if (list[0].charAt(1) == 'K') {
+    if (list[0].charAt(1) == SerialConnection.SRLRSP_CHAR_COMPLETE) {
       println("processing for command " + this.lastCommand + " complete");
       buffer = this.parameterBuffer.remove(0);
       
@@ -664,7 +720,7 @@ class CommandQueue {
   * @param String[] list response data array
   */
   void processCmdBatteryResponse(String[] list) {
-    if (list[0].charAt(1) == 'B') {
+    if (list[0].charAt(1) == SerialConnection.SRLRSP_CHAR_BATTERY) {
       float v = this.convertStringToFloat(list[1]);
       println(v);
       bot.setVoltage(v);
@@ -677,7 +733,7 @@ class CommandQueue {
   * @param String[] list response data array
   */
   void processCmdSonarPingResponse(String[] list) {  
-    if (list[0].charAt(1) == 'P') {
+    if (list[0].charAt(1) == SerialConnection.SRLRSP_CHAR_SONARPING) {
       int angle = this.convertStringToInt(list[1]);
       int range = this.convertStringToInt(list[2]);
       println("angle: "+ angle + " range: " + range);
