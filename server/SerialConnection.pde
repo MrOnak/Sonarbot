@@ -1,6 +1,9 @@
 import processing.serial.*;
 
 class SerialConnection {
+ /** 
+  * the Serial port
+  */
   Serial port;
 
  /**
@@ -23,11 +26,17 @@ class SerialConnection {
   */
   String processingBuffer;
   
+ /** 
+  * constants that define the control tokens used fo Serial communication
+  */
   private static final char SRLCMD_CHAR_START      = '#';
   private static final char SRLCMD_CHAR_CMDSEP     = ':';
   private static final char SRLCMD_CHAR_PAYLOADSEP = ',';
   private static final char SRLCMD_CHAR_END        = '\n';
   
+ /**
+  * constants for the various states of the state-machine that reads from Serial
+  */
   private static final byte SRLCMD_STATE_IDLE              = 0;    // ready to receive new command
   private static final byte SRLCMD_STATE_WAITINGFORCMDBYTE = 1;    // reveived the '#' start char, waiting for command byte
   private static final byte SRLCMD_STATE_CMDBYTERECEIVED   = 2;    // received command char (is expecting a ':' separator char now)
