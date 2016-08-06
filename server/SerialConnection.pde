@@ -23,28 +23,25 @@ class SerialConnection {
   */
   String processingBuffer;
   
-  private static final char SRLCMD_CHAR_START = '#';
-  private static final char SRLCMD_CHAR_CMDSEP = ':';
+  private static final char SRLCMD_CHAR_START      = '#';
+  private static final char SRLCMD_CHAR_CMDSEP     = ':';
   private static final char SRLCMD_CHAR_PAYLOADSEP = ',';
-  private static final char SRLCMD_CHAR_END = '\n';
+  private static final char SRLCMD_CHAR_END        = '\n';
   
-  private static final byte SRLCMD_STATE_IDLE = 0;                 // ready to receive new command
+  private static final byte SRLCMD_STATE_IDLE              = 0;    // ready to receive new command
   private static final byte SRLCMD_STATE_WAITINGFORCMDBYTE = 1;    // reveived the '#' start char, waiting for command byte
-  private static final byte SRLCMD_STATE_CMDBYTERECEIVED = 2;      // received command char (is expecting a ':' separator char now)
+  private static final byte SRLCMD_STATE_CMDBYTERECEIVED   = 2;    // received command char (is expecting a ':' separator char now)
   private static final byte SRLCMD_STATE_WAITINGFORPAYLOAD = 3;    // received separator ':' char, expects payload or terminator now
-  private static final byte SRLCMD_STATE_CMDAVAILABLE = 4;         // received '\n' terminator char (possibly preceeded by payload chars)
-  private static final byte SRLCMD_STATE_ERR = 10;                 // unexpected char over Serial. this error is irrecoverable at the moment
+  private static final byte SRLCMD_STATE_CMDAVAILABLE      = 4;    // received '\n' terminator char (possibly preceeded by payload chars)
+  private static final byte SRLCMD_STATE_ERR               = 10;   // unexpected char over Serial. this error is irrecoverable at the moment
   
   private static final char SRLRSP_CHAR_COMPLETE  = 'K';
   private static final char SRLRSP_CHAR_BATTERY   = 'B';
   private static final char SRLRSP_CHAR_SONARPING = 'P';
   
   private static final int SRLRSP_PAYLOAD_COMPLETE  = 0;
-  private static final int SRLRSP_PARAMS_COMPLETE   = 0;
   private static final int SRLRSP_PAYLOAD_BATTERY   = 4;
-  private static final int SRLRSP_PARAMS_BATTERY    = 1;
   private static final int SRLRSP_PAYLOAD_SONARPING = 9;
-  private static final int SRLRSP_PARAMS_SONARPING  = 2;
   
  /**
   * internal state of the state machine

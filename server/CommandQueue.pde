@@ -28,7 +28,7 @@ class CommandQueue {
   private SerialCommandBuilder builder;
   private SerialCommandFactory factory;
     
-  final static char CMD_NOOP         = ' ';
+  final static char CMD_NOOP = ' ';
   
  /**
   * constructor
@@ -143,7 +143,7 @@ class CommandQueue {
     
     if (this.commandQueue.size() > 0 && this.cmdProcessed) {
       cmdString = this.commandQueue.remove(0);
-      cmd       = (byte) cmdString.get(1);
+      cmd       = cmdString.get(1);
       
       println("sending command " + (char) cmd);
       this.lastCommand = (char) cmd;
