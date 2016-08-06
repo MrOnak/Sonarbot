@@ -57,9 +57,9 @@ class SerialCommandBuilder {
     }
     
     if (paramCount > 0) {
-      return f.makeCommand(cmdByte, params);
+      return this.f.makeCommand(cmdByte, params);
     } else {
-      return f.makeCommand(cmdByte);
+      return this.f.makeCommand(cmdByte);
     }
   } 
   
@@ -95,5 +95,30 @@ class SerialCommandBuilder {
     }
     
     return retval;
+  }
+  
+ /** 
+  * serializes an instance of SerialCommand for transmission over Serial port
+  *
+  * @param char cmdChar
+  * @return ArrayList<Byte>
+  */
+  ArrayList<Byte> serialize(char cmdChar) {
+    SerialCommand cmd = this.f.makeCommand(cmdChar);
+    
+    return this.serialize(cmd);
+  }
+ 
+ /**
+  * serializes and instance of SerialCOmmand for transmission over Serial port
+  *
+  * @param char cmdChar
+  * @param Object... params
+  * @return ArrayList<Byte>
+  */
+  ArrayList<Byte> serialize(char cmdChar, Object... params) {
+    SerialCommand cmd = this.f.makeCommand(cmdChar, params);
+    
+    return this.serialize(cmd);
   }
 }

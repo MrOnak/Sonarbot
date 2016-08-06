@@ -3,10 +3,15 @@ import java.nio.ByteBuffer;
 
 class CommandQueue {
  /** 
-  * reference to the Serial connection to the robot
+  * reference to the Serial connection handler to the robot
   */
   private SerialConnection conn;
 
+ /**
+  * Class that abstracts the construction and parsing of Serial commands
+  */
+  private SerialCommandBuilder builder;
+  
  /**
   * queue of commands going to the robot
   */
@@ -23,11 +28,22 @@ class CommandQueue {
    * has been received without caching and unserializing the byte stream again
    */
   private ArrayList<ArrayList<Integer>> parameterBuffer;
+  
+ /**
+  * 'memory' of the last command sent over Serial
+  */
   char lastCommand;
+ 
+ /**
+  * We're not sending commands over Serial until we have confirmation that
+  * the robot has processed any previous command. This flag keeps track of
+  * the state
+  */
   private boolean cmdProcessed;
-  private SerialCommandBuilder builder;
-  private SerialCommandFactory factory;
     
+ /** 
+  * Pointer for when no command is currently being processed
+  */
   final static char CMD_NOOP = ' ';
   
  /**
@@ -43,7 +59,6 @@ class CommandQueue {
     this.lastCommand     = CommandQueue.CMD_NOOP;
     this.cmdProcessed    = true;
     this.builder         = new SerialCommandBuilder();
-    this.factory         = new SerialCommandFactory();
   }
 
  /**
@@ -237,9 +252,7 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.builder.serialize(
-        this.factory.makeCommand(SerialRequestBattery.COMMAND_CHAR)
-      )
+      this.builder.serialize(SerialRequestBattery.COMMAND_CHAR)
     );
  
     return true;
@@ -257,9 +270,7 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.builder.serialize(
-        this.factory.makeCommand(SerialRequestTurnleft.COMMAND_CHAR, angle)
-      )
+      this.builder.serialize(SerialRequestTurnleft.COMMAND_CHAR, angle)
     );
     
     return true;
@@ -277,9 +288,7 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.builder.serialize(
-        this.factory.makeCommand(SerialRequestTurnright.COMMAND_CHAR, angle)
-      )
+      this.builder.serialize(SerialRequestTurnright.COMMAND_CHAR, angle)
     );
     
     return true;
@@ -297,9 +306,7 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.builder.serialize(
-        this.factory.makeCommand(SerialRequestMoveforward.COMMAND_CHAR, distance)
-      )
+      this.builder.serialize(SerialRequestMoveforward.COMMAND_CHAR, distance)
     );
     
     return true;
@@ -317,9 +324,7 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.builder.serialize(
-        this.factory.makeCommand(SerialRequestMovebackward.COMMAND_CHAR, distance)
-      )
+      this.builder.serialize(SerialRequestMovebackward.COMMAND_CHAR, distance)
     );
     
     return true;
@@ -335,9 +340,7 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.builder.serialize(
-        this.factory.makeCommand(SerialRequestLcdclear.COMMAND_CHAR)
-      )
+      this.builder.serialize(SerialRequestLcdclear.COMMAND_CHAR)
     );
     
     return true;
@@ -359,9 +362,7 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.builder.serialize(
-        this.factory.makeCommand(SerialRequestLcdwrite.COMMAND_CHAR, x, y, text)
-      )
+      this.builder.serialize(SerialRequestLcdwrite.COMMAND_CHAR, x, y, text)
     );
     
     return true;
@@ -380,9 +381,7 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.builder.serialize(
-        this.factory.makeCommand(SerialRequestSonarping.COMMAND_CHAR, angle)
-      )
+      this.builder.serialize(SerialRequestSonarping.COMMAND_CHAR, angle)
     );
     
     return true;
@@ -405,9 +404,7 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.builder.serialize(
-        this.factory.makeCommand(SerialRequestSonarsweep.COMMAND_CHAR, startAngle, endAngle, stepSize)
-      )
+      this.builder.serialize(SerialRequestSonarsweep.COMMAND_CHAR, startAngle, endAngle, stepSize)
     );
     
     return true;
@@ -468,10 +465,6 @@ class CommandQueue {
       int angle = response.getParamAsInt(0);
       int range = response.getParamAsInt(1);
       println("angle: "+ angle + " range: " + range);
-      
-      if (this.lastCommand == SerialRequestSonarping.COMMAND_CHAR) {
-        this.lastCommand = CommandQueue.CMD_NOOP;
-      }
     }
   }
 }
