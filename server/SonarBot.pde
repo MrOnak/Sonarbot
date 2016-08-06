@@ -25,13 +25,8 @@ class SonarBot {
     
  /** 
   * draws the bot
-  *
-  * @param float centerX
-  * @param float centerY
-  * @param float scrollX
-  * @param float scrollY
   */
-  void draw(float centerX, float centerY, float scrollX, float scrollY) {
+  void draw() {
     float angle  = radians(this.angle);
     float radius = scaleMMtoPx(this.BOT_RADIUS);
     float x      = this.getScreenPosX();

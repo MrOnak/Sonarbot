@@ -28,7 +28,7 @@ void draw() {
   guiRefresh();
   
   if (batteryCheckTimer > 3600 * 5) {
-    commandHandler.addCommand(CommandQueue.CMD_BATTERY);
+    commandHandler.addCommand(SerialRequestBattery.COMMAND_CHAR);
     batteryCheckTimer = 0;
   }
   

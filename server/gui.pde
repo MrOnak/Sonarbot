@@ -47,7 +47,7 @@ void guiRefresh() {
   
   grid.draw(scrollX, scrollY);
   drawHome();
-  bot.draw(centerX, centerY, scrollX, scrollY);
+  bot.draw();
   
   drawCues();
   drawHUD();
@@ -253,11 +253,11 @@ void keyReleased() {
       break;
     case 's':
       println("performing sonar sweep");
-      commandHandler.addCommand(commandHandler.CMD_SONARSWEEP, -60, 60, 2);
+      commandHandler.addCommand(SerialRequestSonarsweep.COMMAND_CHAR, -60, 60, 2);
       break;
     case 'b':
       println("querying battery voltage");
-      commandHandler.addCommand(commandHandler.CMD_BATTERY);
+      commandHandler.addCommand(SerialRequestBattery.COMMAND_CHAR);
       break;
     default:
   }
@@ -310,9 +310,9 @@ void mouseClicked(MouseEvent event) {
         angle = bot.getRotationToScreenPos(mX, mY);        
         println("rotating bot by " + angle + " degrees");
         if (angle > 0) {
-          commandHandler.addCommand(commandHandler.CMD_TURNRIGHT, angle);
+          commandHandler.addCommand(SerialRequestTurnright.COMMAND_CHAR, angle);
         } else {
-          commandHandler.addCommand(commandHandler.CMD_TURNLEFT, angle);
+          commandHandler.addCommand(SerialRequestTurnleft.COMMAND_CHAR, angle);
         }
         break;
       case 'm':
@@ -321,11 +321,11 @@ void mouseClicked(MouseEvent event) {
         println("moving bot to position for " + dist + " mm after rotating by " + angle + " degrees");
         
         if (angle > 0) {
-          commandHandler.addCommand(commandHandler.CMD_TURNRIGHT, angle);
+          commandHandler.addCommand(SerialRequestTurnright.COMMAND_CHAR, angle);
         } else {
-          commandHandler.addCommand(commandHandler.CMD_TURNLEFT, angle);
+          commandHandler.addCommand(SerialRequestTurnleft.COMMAND_CHAR, angle);
         }
-        commandHandler.addCommand(commandHandler.CMD_MOVEFORWARD, dist);
+        commandHandler.addCommand(SerialRequestMoveforward.COMMAND_CHAR, dist);
         break;
       default:
     }

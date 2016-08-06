@@ -73,6 +73,22 @@ abstract class SerialCommand {
   }   
   
  /**
+  * returns the parameter at the given index converted to int
+  *
+  * @param int index
+  * @return String
+  */
+  String getParamAsString(int index) {
+    String retval = "";
+    
+    if (index < this.paramCount) {
+      retval = this.params.get(index);
+    }
+    
+    return retval;
+  }
+  
+ /**
   * returns the parameter at the given index converted to float
   *
   * @param int index
@@ -82,7 +98,11 @@ abstract class SerialCommand {
     float retval = 0.0;
     
     if (index < this.paramCount) {
-      retval = this.convertBytesToFloat(this.convertStringToBytes(this.params.get(index)));
+      retval  = this.convertBytesToFloat(
+                  this.convertStringToBytes(
+                    this.getParamAsString(index)
+                  )
+                );
     }
     
     return retval;
@@ -98,18 +118,22 @@ abstract class SerialCommand {
     int retval = 0;
     
     if (index < this.paramCount) {
-      retval = this.convertBytesToInt(this.convertStringToBytes(this.params.get(index)));
+      retval  = this.convertBytesToInt(
+                  this.convertStringToBytes(
+                    this.getParamAsString(index)
+                  )
+                );
     }
     
     return retval;
   }
   
-  /**
-   * sets the value of the parameter at the given index
-   *
-   * @param int index
-   * @param String value
-   */
+ /**
+  * sets the value of the parameter at the given index
+  *
+  * @param int index
+  * @param String value
+  */
   protected void setParam(int index, String value) {  
     if (index < this.paramCount) {
       this.params.set(index, value);
@@ -117,10 +141,40 @@ abstract class SerialCommand {
   }
   
   /**
-   * generic toString()
-   *
-   * @return String
+   * sets the value of the parameter at the given index from a String value
+   * 
+   * @param int index
+   * @param String value
    */
+  protected void setParamFromString(int index, String value) {
+    this.setParam(index, value);
+  }
+  
+ /**
+  * sets the value of the parameter at the given index from an integer value
+  *
+  * @param int index
+  * @param int value
+  */
+  protected void setParamFromInt(int index, int value) {
+    this.setParamFromString(index, new String(this.convertIntToBytes(value)));
+  }
+  
+ /**
+  * sets the value of the parameter at the given index from a byte value
+  * 
+  * @param int index
+  * @param byte value
+  */
+  protected void setParamFromByte(int index, byte value) {
+    this.setParamFromString(index, new String(new byte[] {value}));
+  }
+  
+ /**
+  * generic toString()
+  *
+  * @return String
+  */
   public String toString() {
     String retval = this.cmdChar + "['";
     
@@ -160,6 +214,16 @@ abstract class SerialCommand {
   }
   
  /**
+  * converts a Java float to four bytes and sends those individually, MSB first
+  *
+  * @param int number
+  * @return byte[]
+  */
+  private byte[] convertFloatToBytes(float number) {
+    return ByteBuffer.allocate(4).putFloat(number).array();
+  }
+  
+ /**
   * converts a four byte representation of a integer into a int primitive
   *
   * @param byte[] b     expects a 4 byte array
@@ -169,5 +233,23 @@ abstract class SerialCommand {
     byte[] f = new byte[]{b[0], b[1], b[2], b[3]};
     return ByteBuffer.wrap(f).getInt();
   }   
+  
+ /**
+  * converts a Java int to four bytes and sends those individually, MSB first
+  *
+  * @param int number
+  * @return byte[]
+  */
+  private byte[] convertIntToBytes(int number) {
+    byte[] i = new byte[] {0,0,0,0};
+    
+    i[0] = (byte) (number >> 24);
+    i[1] = (byte) (number >> 16);
+    i[2] = (byte) (number >> 8);
+    i[3] = (byte) (number);
+    
+    return i;    
+  }
+      
     
 }

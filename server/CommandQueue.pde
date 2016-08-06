@@ -26,17 +26,9 @@ class CommandQueue {
   char lastCommand;
   private boolean cmdProcessed;
   private SerialCommandBuilder builder;
+  private SerialCommandFactory factory;
     
   final static char CMD_NOOP         = ' ';
-  final static char CMD_BATTERY      = 'b';
-  final static char CMD_TURNLEFT     = 'l';
-  final static char CMD_TURNRIGHT    = 'r';
-  final static char CMD_MOVEFORWARD  = 'm';
-  final static char CMD_MOVEBACKWARD = 'e';
-  final static char CMD_LCDCLEAR     = 'c';
-  final static char CMD_LCDWRITE     = 'w';
-  final static char CMD_SONARPING    = 'p';
-  final static char CMD_SONARSWEEP   = 's';
   
  /**
   * constructor
@@ -51,6 +43,7 @@ class CommandQueue {
     this.lastCommand     = CommandQueue.CMD_NOOP;
     this.cmdProcessed    = true;
     this.builder         = new SerialCommandBuilder();
+    this.factory         = new SerialCommandFactory();
   }
 
  /**
@@ -119,18 +112,18 @@ class CommandQueue {
         println("last command: " + this.lastCommand);
         
         switch (this.lastCommand) {
-          case CommandQueue.CMD_BATTERY:
+          case SerialRequestBattery.COMMAND_CHAR:
             processCmdBatteryResponse(responseCmd);
             break;
-          case CommandQueue.CMD_TURNLEFT:
-          case CommandQueue.CMD_TURNRIGHT:
-          case CommandQueue.CMD_MOVEFORWARD:
-          case CommandQueue.CMD_MOVEBACKWARD:
-          case CommandQueue.CMD_LCDCLEAR:
-          case CommandQueue.CMD_LCDWRITE:
+          case SerialRequestTurnleft.COMMAND_CHAR:
+          case SerialRequestTurnright.COMMAND_CHAR:
+          case SerialRequestMoveforward.COMMAND_CHAR:
+          case SerialRequestMovebackward.COMMAND_CHAR:
+          case SerialRequestLcdclear.COMMAND_CHAR:
+          case SerialRequestLcdwrite.COMMAND_CHAR:
             break;
-          case CommandQueue.CMD_SONARPING:
-          case CommandQueue.CMD_SONARSWEEP:
+          case SerialRequestSonarping.COMMAND_CHAR:
+          case SerialRequestSonarsweep.COMMAND_CHAR:
             processCmdSonarPingResponse(responseCmd);
             break;          
         }
@@ -175,47 +168,47 @@ class CommandQueue {
     String t;
     
     switch(cmd) {
-      case CommandQueue.CMD_BATTERY:
+      case SerialRequestBattery.COMMAND_CHAR:
         retval = this.cmdBattery();
         break;
 
-      case CommandQueue.CMD_TURNLEFT:
+      case SerialRequestTurnleft.COMMAND_CHAR:
         i = (Integer) params[0];
         retval = this.cmdTurnLeft(i.intValue());
         break;
         
-      case CommandQueue.CMD_TURNRIGHT:
+      case SerialRequestTurnright.COMMAND_CHAR:
         i = (Integer) params[0];
         retval = this.cmdTurnRight(i.intValue());
         break;
         
-      case CommandQueue.CMD_MOVEFORWARD:
+      case SerialRequestMoveforward.COMMAND_CHAR:
         i = (Integer) params[0];
         retval = this.cmdMoveForward(i.intValue());
         break;
         
-      case CommandQueue.CMD_MOVEBACKWARD:
+      case SerialRequestMovebackward.COMMAND_CHAR:
         i = (Integer) params[0];
         retval = this.cmdMoveBackward(i.intValue());
         break;
         
-      case CommandQueue.CMD_LCDCLEAR:
+      case SerialRequestLcdclear.COMMAND_CHAR:
         retval = this.cmdLcdClear(); 
         break;
         
-      case CommandQueue.CMD_LCDWRITE:
+      case SerialRequestLcdwrite.COMMAND_CHAR:
         x = (Integer) params[0];
         y = (Integer) params[1];
         t = (String)  params[2];
         retval = this.cmdLcdWrite(x.intValue(), y.intValue(), t);
         break;
         
-      case CommandQueue.CMD_SONARPING:
+      case SerialRequestSonarping.COMMAND_CHAR:
         i = (Integer) params[0];
         retval = this.cmdSonarPing(i.intValue());
         break;
         
-      case CommandQueue.CMD_SONARSWEEP:
+      case SerialRequestSonarsweep.COMMAND_CHAR:
         a = (Integer) params[0];
         b = (Integer) params[1];
         s = (Integer) params[2];
@@ -227,157 +220,7 @@ class CommandQueue {
     
     return retval;
   }
-  
-  
- /** 
-  * splits the raw byte stream into the command byte and the associated parameters.
-  *
-  * @param String stream
-  * @return String[]
-  */
-  private String[] unserialize(String stream) {
-    String[] retval;
-    int params    = 0;
     
-    // determine number of parameters based on command response byte
-    switch (stream.charAt(1)) {
-      case SerialConnection.SRLRSP_CHAR_COMPLETE:
-        params = SerialConnection.SRLRSP_PARAMS_COMPLETE;
-        retval = new String[params + 1];
-        retval[0] = new StringBuilder("")
-                      .append(SerialConnection.SRLCMD_CHAR_START)
-                      .append(SerialConnection.SRLRSP_CHAR_COMPLETE)
-                      .toString();
-        break;
-        
-      case SerialConnection.SRLRSP_CHAR_BATTERY:
-        params = SerialConnection.SRLRSP_PARAMS_BATTERY;
-        retval = new String[params + 1];
-        retval[0] = new StringBuilder("")
-                      .append(SerialConnection.SRLCMD_CHAR_START)
-                      .append(SerialConnection.SRLRSP_CHAR_BATTERY)
-                      .toString();
-        break;
-        
-      case SerialConnection.SRLRSP_CHAR_SONARPING:
-        params = SerialConnection.SRLRSP_PARAMS_SONARPING;
-        retval = new String[params + 1];
-        retval[0] = new StringBuilder("")
-                      .append(SerialConnection.SRLCMD_CHAR_START)
-                      .append(SerialConnection.SRLRSP_CHAR_SONARPING)
-                      .toString();
-        break;
-        
-      default:
-        println("unknown response command");
-        retval = null;
-    }
-    
-    // parameters can be parsed independent of command response byte now
-    for (int i = 0; i < params; i++) {
-      retval[1 + i] = "";
-      for (int b = 0; b < 4; b++) {
-        // 0123456789abc
-        // #P:abcd,efgh\n
-        retval[1 + i] += stream.charAt(3 + 5 * i + b);
-      }
-    }
-    
-    return retval;
-  }
-  
- /**
-  * converts each of the parameters into a representation that is transmittable over Serial
-  *
-  * @param Object... objects
-  * @return String
-  */
-  private ArrayList<Byte> serialize(Object... objects) {
-    ArrayList<Byte> retval = new ArrayList<Byte>();
-    byte[] tmp;
-    
-    for (Object o : objects) {
-      if (o.getClass().equals(Integer.class)) {
-        Integer i = (Integer) o;
-        tmp = this.makeSerialInt(i.intValue());
-        
-      } else if (o.getClass().equals(Float.class)) {
-        Float f = (Float) o;
-        tmp = this.makeSerialFloat(f.floatValue());
-      
-      } else if (o.getClass().equals(Byte.class)) {
-        tmp = new byte[] {(byte) o};
-        
-      } else if (o.getClass().equals(String.class)) {
-        tmp = this.makeSerialString((String) o);
-        
-      } else if (o.getClass().equals(Character.class)) {
-        Character c = (Character) o;
-        tmp = new byte[]{(byte) c.charValue()};
-        
-      } else {
-        println("unrecognized type for serialization");
-        tmp = null;
-      }
-      
-      if (tmp != null) {
-        
-        for (Byte b : tmp) {
-          retval.add(b);
-        }
-      }
-    }  
-    
-    return retval;    
-  }
-  
- /**
-  * converts a Java int to four bytes and sends those individually, MSB first
-  *
-  * @param int number
-  * @return byte[]
-  */
-  private byte[] makeSerialInt(int number) {
-    byte[] i = new byte[] {0,0,0,0};
-    
-    i[0] = (byte) (number >> 24);
-    i[1] = (byte) (number >> 16);
-    i[2] = (byte) (number >> 8);
-    i[3] = (byte) (number);
-    
-    return i;    
-  }
-    
- /**
-  * converts a Java float to four bytes and sends those individually, MSB first
-  *
-  * @param int number
-  * @return byte[]
-  */
-  private byte[] makeSerialFloat(float number) {
-    return ByteBuffer.allocate(4).putFloat(number).array();
-  }
-  
- /**
-  * converts a Java String into its byte representation and sends those individually
-  *
-  * @param String text
-  * @return String
-  */
-  private byte[] makeSerialString(String text) {
-    int len = text.length();
-    byte[] s = new byte[len];
-    
-    for (int i = 0; i < len; i++) {
-      s[i] = byte(text.charAt(i));
-    }
-    
-    return s;
-  }    
-   
-  
-    
-  
   
   
   
@@ -394,13 +237,8 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.serialize(
-        new StringBuilder("")
-          .append(SerialConnection.SRLCMD_CHAR_START)
-          .append(CommandQueue.CMD_BATTERY)
-          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
-          .append(SerialConnection.SRLCMD_CHAR_END)
-          .toString()
+      this.builder.serialize(
+        this.factory.makeCommand(SerialRequestBattery.COMMAND_CHAR)
       )
     );
  
@@ -419,14 +257,8 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.serialize(
-        new StringBuilder("")
-          .append(SerialConnection.SRLCMD_CHAR_START)
-          .append(CommandQueue.CMD_TURNLEFT)
-          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
-          .toString(),
-        angle, 
-        SerialConnection.SRLCMD_CHAR_END
+      this.builder.serialize(
+        this.factory.makeCommand(SerialRequestTurnleft.COMMAND_CHAR, angle)
       )
     );
     
@@ -445,14 +277,8 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.serialize(
-        new StringBuilder("")
-          .append(SerialConnection.SRLCMD_CHAR_START)
-          .append(CommandQueue.CMD_TURNRIGHT)
-          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
-          .toString(), 
-        angle, 
-        SerialConnection.SRLCMD_CHAR_END
+      this.builder.serialize(
+        this.factory.makeCommand(SerialRequestTurnright.COMMAND_CHAR, angle)
       )
     );
     
@@ -471,14 +297,8 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.serialize(
-        new StringBuilder("")
-          .append(SerialConnection.SRLCMD_CHAR_START)
-          .append(CommandQueue.CMD_MOVEFORWARD)
-          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
-          .toString(), 
-        distance, 
-        SerialConnection.SRLCMD_CHAR_END
+      this.builder.serialize(
+        this.factory.makeCommand(SerialRequestMoveforward.COMMAND_CHAR, distance)
       )
     );
     
@@ -497,14 +317,8 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.serialize(
-        new StringBuilder("")
-          .append(SerialConnection.SRLCMD_CHAR_START)
-          .append(CommandQueue.CMD_MOVEBACKWARD)
-          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
-          .toString(), 
-        distance, 
-        SerialConnection.SRLCMD_CHAR_END
+      this.builder.serialize(
+        this.factory.makeCommand(SerialRequestMovebackward.COMMAND_CHAR, distance)
       )
     );
     
@@ -521,13 +335,8 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.serialize(
-        new StringBuilder("")
-          .append(SerialConnection.SRLCMD_CHAR_START)
-          .append(CommandQueue.CMD_LCDCLEAR)
-          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
-          .append(SerialConnection.SRLCMD_CHAR_END)
-          .toString()        
+      this.builder.serialize(
+        this.factory.makeCommand(SerialRequestLcdclear.COMMAND_CHAR)
       )
     );
     
@@ -550,18 +359,8 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.serialize(
-        new StringBuilder("")
-          .append(SerialConnection.SRLCMD_CHAR_START)
-          .append(CommandQueue.CMD_LCDWRITE)
-          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
-          .toString(), 
-        x, 
-        SerialConnection.SRLCMD_CHAR_PAYLOADSEP, 
-        y, 
-        SerialConnection.SRLCMD_CHAR_PAYLOADSEP, 
-        text, 
-        SerialConnection.SRLCMD_CHAR_END
+      this.builder.serialize(
+        this.factory.makeCommand(SerialRequestLcdwrite.COMMAND_CHAR, x, y, text)
       )
     );
     
@@ -581,14 +380,8 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.serialize(
-        new StringBuilder("")
-          .append(SerialConnection.SRLCMD_CHAR_START)
-          .append(CommandQueue.CMD_SONARPING)
-          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
-          .toString(), 
-        angle, 
-        SerialConnection.SRLCMD_CHAR_END
+      this.builder.serialize(
+        this.factory.makeCommand(SerialRequestSonarping.COMMAND_CHAR, angle)
       )
     );
     
@@ -612,18 +405,8 @@ class CommandQueue {
     this.parameterBuffer.add(params);
     
     this.commandQueue.add(
-      this.serialize(
-        new StringBuilder("")
-          .append(SerialConnection.SRLCMD_CHAR_START)
-          .append(CommandQueue.CMD_SONARSWEEP)
-          .append(SerialConnection.SRLCMD_CHAR_CMDSEP)
-          .toString(), 
-        startAngle, 
-        SerialConnection.SRLCMD_CHAR_PAYLOADSEP,
-        endAngle, 
-        SerialConnection.SRLCMD_CHAR_PAYLOADSEP, 
-        byte(stepSize), 
-        SerialConnection.SRLCMD_CHAR_END
+      this.builder.serialize(
+        this.factory.makeCommand(SerialRequestSonarsweep.COMMAND_CHAR, startAngle, endAngle, stepSize)
       )
     );
     
@@ -646,15 +429,15 @@ class CommandQueue {
   void processCmdCompletion(SerialCommand response) {
     ArrayList<Integer> buffer;
     
-    if (response.getCmdChar() == SerialConnection.SRLRSP_CHAR_COMPLETE) {
+    if (response.getCmdChar() == SerialResponseComplete.COMMAND_CHAR) {
       println("processing for command " + this.lastCommand + " complete");
       buffer = this.parameterBuffer.remove(0);
       
-      if (this.lastCommand == CommandQueue.CMD_TURNLEFT
-          || this.lastCommand == CommandQueue.CMD_TURNRIGHT) {
+      if (this.lastCommand == SerialRequestTurnleft.COMMAND_CHAR
+          || this.lastCommand == SerialRequestTurnright.COMMAND_CHAR) {
         bot.rotate(buffer.get(0).intValue());
             
-      } else if (this.lastCommand == CommandQueue.CMD_MOVEFORWARD) {
+      } else if (this.lastCommand == SerialRequestMoveforward.COMMAND_CHAR) {
         bot.move(buffer.get(0).intValue());
       }
       
@@ -669,9 +452,8 @@ class CommandQueue {
   * @param SerialCommand response
   */
   void processCmdBatteryResponse(SerialCommand response) {
-    if (response.getCmdChar() == SerialConnection.SRLRSP_CHAR_BATTERY) {
+    if (response.getCmdChar() == SerialResponseBattery.COMMAND_CHAR) {
       float v = response.getParamAsFloat(0);
-      println(v);
       bot.setVoltage(v);
     }
   }
@@ -682,12 +464,12 @@ class CommandQueue {
   * @param SerialCommand response
   */
   void processCmdSonarPingResponse(SerialCommand response) {  
-    if (response.getCmdChar() == SerialConnection.SRLRSP_CHAR_SONARPING) {
+    if (response.getCmdChar() == SerialResponseSonarping.COMMAND_CHAR) {
       int angle = response.getParamAsInt(0);
       int range = response.getParamAsInt(1);
       println("angle: "+ angle + " range: " + range);
       
-      if (this.lastCommand == CommandQueue.CMD_SONARPING) {
+      if (this.lastCommand == SerialRequestSonarping.COMMAND_CHAR) {
         this.lastCommand = CommandQueue.CMD_NOOP;
       }
     }

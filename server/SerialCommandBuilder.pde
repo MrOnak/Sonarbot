@@ -22,7 +22,8 @@ class SerialCommandBuilder {
   SerialCommand parseFromString(String stream) {
     char cmdByte             = '\0';
     ArrayList<String> params = new ArrayList<String>();
-    int paramCount, sepCount;
+    int paramCount = 0;
+    int sepCount   = 0;
     String tmpParam;
     
     // do some basic integrity testing
@@ -55,6 +56,44 @@ class SerialCommandBuilder {
       println("SerialCommandBuider can't parse the input stream into a command, syntax error");
     }
     
-    return f.makeCommand(cmdByte, params);
+    if (paramCount > 0) {
+      return f.makeCommand(cmdByte, params);
+    } else {
+      return f.makeCommand(cmdByte);
+    }
   } 
+  
+ /** 
+  * serializes an instance of SerialCommand for transmission over Serial port
+  *
+  * @param SerialCommand cmd
+  * @return ArrayList<Byte>
+  */
+  ArrayList<Byte> serialize(SerialCommand cmd) {
+    ArrayList<Byte> retval = new ArrayList<Byte>();
+    String responseStr     = "";
+    StringBuilder sb       = new StringBuilder("");
+    
+    sb.append(SerialConnection.SRLCMD_CHAR_START)
+      .append(cmd.getCmdChar())
+      .append(SerialConnection.SRLCMD_CHAR_CMDSEP);
+      
+    for (int i = 0; i < cmd.getParamCount(); i++) {
+      sb.append(cmd.getParamAsString(i));
+      
+      if (i < cmd.getParamCount() - 1) {
+        sb.append(SerialConnection.SRLCMD_CHAR_PAYLOADSEP);
+      }
+    }
+    
+    sb.append(SerialConnection.SRLCMD_CHAR_END);
+    
+    responseStr = sb.toString();
+    
+    for (int i = 0; i < responseStr.length(); i++) {
+      retval.add((byte) responseStr.charAt(i));
+    }
+    
+    return retval;
+  }
 }
