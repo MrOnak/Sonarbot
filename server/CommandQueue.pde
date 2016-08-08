@@ -465,6 +465,7 @@ class CommandQueue {
       int angle = response.getParamAsInt(0);
       int range = response.getParamAsInt(1);
       println("angle: "+ angle + " range: " + range);
+      bot.setSonarAngle(angle);
     }
   }
 }

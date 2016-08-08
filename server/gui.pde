@@ -104,7 +104,7 @@ void drawHUD() {
  */
 void drawHelp() {
   int width = 300;
-  int height = 150;
+  int height = 170;
   int border = 10;
   int left = width / 2 - border;
   int top = height / 2 - border - border;
@@ -125,8 +125,9 @@ void drawHelp() {
     text("c",                   centerX - left, centerY - top + 20*2); text("center view, reset zoom", centerX, centerY - top + 20*2);
     text("s",                   centerX - left, centerY - top + 20*3); text("sonar sweep",             centerX, centerY - top + 20*3);
     text("b",                   centerX - left, centerY - top + 20*4); text("query battery",           centerX, centerY - top + 20*4);
-    text("hold r & left-click", centerX - left, centerY - top + 20*5); text("rotate the robot",        centerX, centerY - top + 20*5);
-    text("hold m & left-click", centerX - left, centerY - top + 20*6); text("move the robot",          centerX, centerY - top + 20*6);
+    text("i",                   centerX - left, centerY - top + 20*5); text("initialize robot",        centerX, centerY - top + 20*5);
+    text("hold r & left-click", centerX - left, centerY - top + 20*6); text("rotate the robot",        centerX, centerY - top + 20*6);
+    text("hold m & left-click", centerX - left, centerY - top + 20*7); text("move the robot",          centerX, centerY - top + 20*7);
   }
 }
 
@@ -259,6 +260,10 @@ void keyReleased() {
       println("querying battery voltage");
       commandHandler.addCommand(SerialRequestBattery.COMMAND_CHAR);
       break;
+    case 'i':
+      println("initializing robot");
+      commandHandler.addCommand(SerialRequestBattery.COMMAND_CHAR);
+      commandHandler.addCommand(SerialRequestSonarping.COMMAND_CHAR, 0);
     default:
   }
 }

@@ -146,6 +146,8 @@ class SerialConnection {
         case SerialConnection.SRLCMD_STATE_WAITINGFORPAYLOAD:
           if (inChar == SerialConnection.SRLCMD_CHAR_END) {
             // since the CHAR_END is a valid response byte in the payload we verify against expected payload length before publishing the response
+            
+            // @todo the need to know the commands and their payload lengths annoys me greatly
             if ((this.command == SerialConnection.SRLRSP_CHAR_COMPLETE     && this.payloadLength == SerialConnection.SRLRSP_PAYLOAD_COMPLETE)
                 || (this.command == SerialConnection.SRLRSP_CHAR_BATTERY   && this.payloadLength == SerialConnection.SRLRSP_PAYLOAD_BATTERY)
                 || (this.command == SerialConnection.SRLRSP_CHAR_SONARPING && this.payloadLength == SerialConnection.SRLRSP_PAYLOAD_SONARPING)) {

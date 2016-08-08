@@ -6,7 +6,10 @@ class SonarBot {
   int posY;
   float voltage;
   float angle;
+  float sonarAngle;
   final int BOT_RADIUS = 47;                   // in mm
+  final int SONAR_RADIUS = 20;                 // in mm
+  final float SONAR_HALFCURVE = radians(50);            
     
  /**
   * constructor
@@ -15,12 +18,14 @@ class SonarBot {
   * @param int y
   * @param float a angle
   * @param float v voltage
+  * @param float s sonar angle
   */
-  SonarBot(int x, int y, float a, float v) {
+  SonarBot(int x, int y, float a, float v, float s) {
     this.setPosX(x);
     this.setPosY(y);
     this.setAngle(a);
     this.setVoltage(v);    
+    this.setSonarAngle(s);
   }
     
  /** 
@@ -32,12 +37,31 @@ class SonarBot {
     float x      = this.getScreenPosX();
     float y      = this.getScreenPosY();
     
+    float sonarX = this.getSonarScreenPosX();
+    float sonarY = this.getSonarScreenPosY();
+    float sonarR = scaleMMtoPx(this.SONAR_RADIUS);
+    float sonarA = (float) this.angle - 180 + this.sonarAngle;
+    
+    // bring back to range
+    if (sonarA < -180) {
+      sonarA += 360;
+    }
+    
+    float sonarStartAngle = radians(sonarA - 50);
+    float sonarEndAngle   = radians(sonarA + 50);
+    
+    
     stroke(255, 255, 255);
     strokeWeight(1);
     fill(0, 0, 0, 70);
     ellipse(x, y, radius, radius);
-    line(x, y, x + radius * cos(angle), y + radius * sin(angle)
-    );
+    // draw the heading
+    line(x, y, x + radius * cos(angle), y + radius * sin(angle));
+    // draw the sonar 
+    noFill();
+    strokeWeight(4);
+    ellipse(sonarX, sonarY, 2, 2);
+    arc(sonarX, sonarY, scaleMMtoPx(10), scaleMMtoPx(10),sonarStartAngle, sonarEndAngle, CHORD);
   }  
   
  /**
@@ -84,6 +108,51 @@ class SonarBot {
   */
   void setPosY(int y) {
     this.posY = y;
+  }
+  
+  /**
+   * returns the last known angle of the sonar
+   *
+   * @return float
+   */
+  float getSonarAngle() {
+    return this.sonarAngle;
+  }
+  
+  /**
+   * sets the angle of the sonar. 
+   *
+   * @param float angle
+   */
+  void setSonarAngle(float a) {
+    this.sonarAngle = a;
+  }
+  
+  /**
+   * returns the x-coordinate of the current sonar position, depending on bot angle
+   * and sonar angle.
+   *
+   * @return int
+   * @todo to be implemented
+   */
+
+  int getSonarScreenPosX() {
+    // sonar axle is 53mm in front of the center of the bot and 10mm to the right.
+    // position of the sonar head further depends on the angle of the servo at the time,
+    //   4mm to the left of the sonar axle and 12mm in front of it
+    return int(scaleMMtoPx(this.posX + 54 * cos(radians(this.angle + 11))) + centerX + scrollX);
+  }
+  
+  /**
+   * returns the y-coordinate of the current sonar position, depending on bot angle
+   * and sonar angle.
+   *
+   * @return int
+   * @todo to be implemented
+   */
+  int getSonarScreenPosY() {
+    return int(scaleMMtoPx(this.posY + 54 * sin(radians(this.angle + 11))) + centerY + scrollY);
+
   }
   
  /**
