@@ -1,0 +1,11 @@
+{
+  "leftturnWheelCalibration": 1.0,
+  "leftturnMsPerDeg": 9.77,
+  "rightturnWheelCalibration": 1.0,
+  "rightturnMsPerDeg": 10.22,
+  "forwardWheelCalibration": 0.96,
+  "forwardMsPerMM": 13.65,
+  "backwardWheelCalibration": 0.95,
+  "backwardMsPerMM": 12.75
+}
+

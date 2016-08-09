@@ -15,10 +15,16 @@ void setup() {
   
   conn              = new SerialConnection(this, 115200);
   commandHandler    = new CommandQueue(conn);
-  bot               = new SonarBot(0, 0, 0.0, 5.0);
   grid              = new Landscape(1001, 1001);           // 10x10 m³
+  bot               = new SonarBot(0, 0, 0.0, 5.0, grid);
   batteryCheckTimer = 0;
    
+  bot.setSonar(-85, 350);
+  bot.setSonar(160, 400);
+  bot.setSonar(-45, 123);
+  bot.setSonar(-10, 1100);
+  bot.setSonar(30, 420);
+  
   guiInit();
 }
 

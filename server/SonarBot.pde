@@ -2,6 +2,7 @@
  * Simple data store for the m3pi bot
  */
 class SonarBot {
+  Landscape grid;
   int posX;
   int posY;
   float voltage;
@@ -10,8 +11,8 @@ class SonarBot {
   int sonarRange;
   final int BOT_RADIUS = 47;                   // in mm
   final int SONAR_RADIUS = 20;                 // in mm
-  final float SONAR_BEAMANGLE_HALF = 7.5;
-  final float SONAR_HALFCURVE = radians(50);            
+  final float SONAR_BEAMANGLE_HALF = 7.5;      // 15° beam cone for the HC-SR04
+  final float SONAR_HALFCURVE = radians(50);   // for visuals only
     
  /**
   * constructor
@@ -20,12 +21,14 @@ class SonarBot {
   * @param int y
   * @param float a angle
   * @param float v voltage
+  * @param Landscape grid
   */
-  SonarBot(int x, int y, float a, float v) {
+  SonarBot(int x, int y, float a, float v, Landscape grid) {
     this.setPosX(x);
     this.setPosY(y);
     this.setAngle(a);
-    this.setVoltage(v);    
+    this.setVoltage(v); 
+    this.setGrid(grid);
     this.setSonar(0, 0);
   }
     
@@ -40,7 +43,7 @@ class SonarBot {
     
     stroke(255, 255, 255);
     strokeWeight(1);
-    fill(0, 0, 0, 70);
+    fill(120, 120, 120, 70);
     ellipse(x, y, radius, radius);
     // draw the heading
     line(x, y, x + radius * cos(angle), y + radius * sin(angle));
@@ -78,8 +81,6 @@ class SonarBot {
     float sonarX = this.getSonarScreenPosX();
     float sonarY = this.getSonarScreenPosY();
     float sonarA = this.getSonarAngle() + this.getAngle();
-    // 15° beam cone for the HC-SR04
-    // @todo parametrize this
     float sonarStartA = sonarA - this.SONAR_BEAMANGLE_HALF;
     float sonarEndA   = sonarA + this.SONAR_BEAMANGLE_HALF;
         
@@ -95,10 +96,21 @@ class SonarBot {
     float endX2 = sonarX + scaleMMtoPx(this.sonarRange) * cos(radians(sonarEndA));
     float endY2 = sonarY + scaleMMtoPx(this.sonarRange) * sin(radians(sonarEndA));
     
-    stroke(255, 255, 255);
+    stroke(0, 255, 0, 100);
     strokeWeight(1);
     noFill();
     triangle(sonarX, sonarY, endX1, endY1, endX2, endY2);
+  }
+  
+ /**
+  * assigns a reference to the Landscape
+  *
+  * used for updating the Landscape with sonar measurements
+  *
+  * @param Landscape g
+  */
+  void setGrid(Landscape g) {
+    this.grid = g;
   }
   
  /**
@@ -156,6 +168,30 @@ class SonarBot {
   void setSonar(int a, int r) {
     this.setSonarAngle(a);
     this.setSonarRange(r);
+
+    if (r > 0) {
+      // required to circumvent initialization
+      float sonarX = this.getSonarPosX();
+      float sonarY = this.getSonarPosY();
+      float sonarA = this.getSonarAngle() + this.getAngle();
+      float sonarStartA = sonarA - this.SONAR_BEAMANGLE_HALF;
+      float sonarEndA   = sonarA + this.SONAR_BEAMANGLE_HALF;
+          
+      if (sonarStartA < -180) {
+        sonarStartA += 360;
+      }
+      if (sonarEndA < -180) {
+        sonarEndA += 360;
+      }
+      
+      float endX1 = sonarX + this.sonarRange * cos(radians(sonarStartA));
+      float endY1 = sonarY + this.sonarRange * sin(radians(sonarStartA));
+      float endX2 = sonarX + this.sonarRange * cos(radians(sonarEndA));
+      float endY2 = sonarY + this.sonarRange * sin(radians(sonarEndA));
+      
+      this.grid.addFreeSpace((int) sonarX, (int) sonarY, (int) endX1, (int) endY1, (int) endX2, (int) endY2);
+    }
+
   }
   
  /**
@@ -210,30 +246,47 @@ class SonarBot {
   void setSonarRange(int r) {
     this.sonarRange = r;
   }
-  
+
+ 
  /**
-  * returns the x-coordinate of the current sonar position, depending on bot angle
+  * returns the x-coordinate of the position of the sonar in the real world (center of its axle)
+  *
+  * @return int
+  */
+ int getSonarPosX() {
+   return (int) (this.posX + 54 * cos(radians(this.angle + 11)));
+ }
+ 
+ /**
+  * returns the y-coordinate of the position of the sonar in the real world (center of its axle)
+  *
+  * @return int
+  */
+ int getSonarPosY() {
+   return (int) (this.posY + 54 * sin(radians(this.angle + 11)));
+ }
+ 
+ /**
+  * returns the x-coordinate of the current sonar position on screen (!), depending on bot angle
   * and sonar angle.
   *
   * @return int
-  * @todo to be implemented
   */
   int getSonarScreenPosX() {
     // sonar axle is 53mm in front of the center of the bot and 10mm to the right.
     // position of the sonar head further depends on the angle of the servo at the time,
     //   4mm to the left of the sonar axle and 12mm in front of it
-    return int(scaleMMtoPx(this.posX + 54 * cos(radians(this.angle + 11))) + centerX + scrollX);
+    return int(scaleMMtoPx(this.getSonarPosX()) + centerX + scrollX);
   }
   
  /**
-  * returns the y-coordinate of the current sonar position, depending on bot angle
+  * returns the y-coordinate of the current sonar position on screen (!), depending on bot angle
   * and sonar angle.
   *
   * @return int
-  * @todo to be implemented
   */
   int getSonarScreenPosY() {
-    return int(scaleMMtoPx(this.posY + 54 * sin(radians(this.angle + 11))) + centerY + scrollY);
+    return int(scaleMMtoPx(this.getSonarPosY()) + centerY + scrollY);
 
   }
   

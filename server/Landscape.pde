@@ -12,12 +12,14 @@
  * The bots position 0/0 refers to width/2 / height/2 on the grid stored in this array
  */
 class Landscape {
+  GridMath gm;
   int width;
   int height;
   int[][] grid;
   int gridCenterX;
   int gridCenterY;
   final int CELL_SIZE = 10; // in mm
+  final int VISIBILITY_INCREMENT = 100;
   
  /**
   * constructor
@@ -26,13 +28,14 @@ class Landscape {
   * @param int h
   */
   Landscape(int w, int h) {
+    this.gm     = new GridMath(this);
     this.width = w;
     this.height = h;
     this.grid = new int[w][h];
     
     for (int y = 0; y < this.height; y++) {
       for (int x = 0; x < this.width; x++) {
-        this.grid[x][y] = 50; 
+        this.grid[x][y] = 0; 
       }
     }
     
@@ -65,7 +68,8 @@ class Landscape {
     int posX, posY;
     
     rectMode(CENTER);
-    noStroke();
+    stroke(0, 0, 0, 100);
+    strokeWeight(1);
         
     for (int y = 0; y <= cellsY; y++) {
       for (int x = 0; x <= cellsX; x++) {
@@ -83,5 +87,85 @@ class Landscape {
         }
       }
     }
+  }
+  
+ /**
+  * considers the triangle of cells spanned by the given three coordinates as accessible and
+  * will update the grid data accordingly.
+  *
+  * all coordinates are expected to be in millimeters relative to the [0, 0] point of origin
+  *
+  * @param int x1
+  * @param int y1
+  * @param int x2
+  * @param int y2
+  * @param int x3
+  * @param int y3
+  */
+  void addFreeSpace(int x1, int y1, int x2, int y2, int x3, int y3) {
+    int gridX1 = this.convertMMToCellX(x1);
+    int gridY1 = this.convertMMToCellY(y1);
+    int gridX2 = this.convertMMToCellX(x2);
+    int gridY2 = this.convertMMToCellY(y2);
+    int gridX3 = this.convertMMToCellX(x3);
+    int gridY3 = this.convertMMToCellY(y3);
+    
+    this.drawLine(gridX1, gridY1, gridX2, gridY2); 
+    this.drawLine(gridX1, gridY1, gridX3, gridY3); 
+    this.drawLine(gridX2, gridY2, gridX3, gridY3); 
+    //this.grid[gridX1][gridY1] = 100;
+    //this.grid[gridX2][gridY2] = 100;
+    //this.grid[gridX3][gridY3] = 100;
+  }
+  
+  void increaseCellOpenness(int x, int y) {
+    this.grid[x][y] = min(100, this.grid[x][y] + this.VISIBILITY_INCREMENT);
+  }
+  
+ /**
+  * expects a horizontal distance relative from the origin as parameter and will return
+  * the matching cell offset for it
+  *
+  * @param int dist
+  * @return int
+  */
+  int convertMMToCellX(int dist) {
+    return this.gridCenterX + round(dist / (float) this.CELL_SIZE);
+  }
+  
+ /**
+  * expects a vertical distance relative from the origin as parameter and will return
+  * the matching cell offset for it
+  *
+  * @param int dist
+  * @return int
+  */
+  int convertMMToCellY(int dist) {
+    return this.gridCenterY + round(dist / (float) this.CELL_SIZE);
+  }
+  
+  boolean coordsAreInBounds(GridCoordinate pos) {
+    boolean retval = false;
+    
+    if (pos.x > -1 && pos.x < this.width
+        && pos.y > -1 && pos.y < height) {
+          
+      retval = true;
+    }
+    
+    return retval;
+  }
+  
+  void drawLine(int x0, int y0, int x1, int y1) {
+    GridCoordinate start = new GridCoordinate(x0, y0);
+    GridCoordinate dest  = new GridCoordinate(x1, y1);
+    
+    ArrayList<GridCoordinate> cells = this.gm.bresenhamLine(start, dest);
+    //println(cells);
+    
+    for (GridCoordinate c : cells) {
+      this.increaseCellOpenness(c.x, c.y);
+    }
+    
   }
 }
