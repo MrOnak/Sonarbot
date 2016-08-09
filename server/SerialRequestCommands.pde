@@ -18,6 +18,28 @@ class SerialRequestBattery extends SerialCommand {
 }
 
 /**
+ * Serial Command class for the flexible movement request to the robot
+ */
+class SerialRequestFlexiblemovement extends SerialCommand {
+  final static char COMMAND_CHAR = 'f';
+  
+ /**
+  * constructor
+  *
+  * @param float turnrateLeft [-1.0, 1.0]
+  * @param float turnrateRight [-1.0, 1.0]
+  * @param int duration in ms
+  */
+  SerialRequestFlexiblemovement(float turnrateLeft, float turnrateRight, int duration) {
+    super(COMMAND_CHAR, 3);
+    
+    this.setParamFromFloat(0, turnrateLeft);
+    this.setParamFromFloat(1, turnrateRight);
+    this.setParamFromInt(2, duration);
+  }
+}
+
+/**
  * Serial Command class for the left turn request to the robot
  */
 class SerialRequestTurnleft extends SerialCommand {

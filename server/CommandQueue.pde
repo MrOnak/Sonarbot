@@ -130,6 +130,7 @@ class CommandQueue {
           case SerialRequestBattery.COMMAND_CHAR:
             processCmdBatteryResponse(responseCmd);
             break;
+          case SerialRequestFlexiblemovement.COMMAND_CHAR:
           case SerialRequestTurnleft.COMMAND_CHAR:
           case SerialRequestTurnright.COMMAND_CHAR:
           case SerialRequestMoveforward.COMMAND_CHAR:
@@ -180,11 +181,18 @@ class CommandQueue {
   boolean addCommand(char cmd, Object... params) {
     boolean retval = false;
     Integer i, x, y, a, b, s;
+    Float f1, f2;
     String t;
     
     switch(cmd) {
       case SerialRequestBattery.COMMAND_CHAR:
         retval = this.cmdBattery();
+        break;
+        
+      case SerialRequestFlexiblemovement.COMMAND_CHAR:
+        a = (Integer) params[0];
+        i = (Integer) params[1];
+        retval = this.cmdFlexibleMovement(a.intValue(), i.intValue());
         break;
 
       case SerialRequestTurnleft.COMMAND_CHAR:
@@ -256,6 +264,105 @@ class CommandQueue {
     );
  
     return true;
+  }
+  
+ /**
+  * sends the server-calibrated movement command to the m3pi.
+  *
+  * will do the conversions required to send the calibration data to the bot
+  *
+  * @param int turnAngle in degrees (-1 - -179 is left, 1 - 179 is right)
+  * @param int distance in mm
+  */
+  private boolean cmdFlexibleMovement(int turnAngle, int distance) {
+    ArrayList<Integer> params = new ArrayList<Integer>();
+    params.add(turnAngle);
+    params.add(distance);
+    this.parameterBuffer.add(params);
+
+    JSONObject calib = loadJSONObject("bot_calibration.json");
+    println(
+      "leftTurnMsPerDeg: "  + calib.getFloat("leftturnMsPerDeg") + " " +
+      "rightTurnMsPerDeg: " + calib.getFloat("rightturnMsPerDeg") + " " +
+      "forwardWheelCalibration: " + calib.getFloat("forwardWheelCalibration") + " " +
+      "forwardMsPerMM: " + calib.getFloat("forwardMsPerMM") + " " +
+      "backwardWheelCalibration: " + calib.getFloat("backwardWheelCalibration") + " " +
+      "backwardMsPerMM: " + calib.getFloat("backwardMsPerMM") + " "
+    );
+
+    // calibrate motor speeds and duration for the initial turn
+    this._cmdFlexibleTurn(turnAngle, calib);
+    
+    // now handle the bit that's moving straight
+    this._cmdFlexibleDrive(distance, calib);    
+    
+    return true;
+  }
+  
+ /**
+  * sub-command that handles the calibration of turns
+  *
+  * do not call this externally, it is used from within cmdFlexibleMovement()
+  *
+  * @param int turnAngle
+  * @param JSONObject calibration
+  */
+  void _cmdFlexibleTurn(int turnAngle, JSONObject calibration) {
+    float turnrateLeft  = 0.0;
+    float turnrateRight = 0.0;
+    float duration        = 0;
+    
+    if (turnAngle != 0) {
+      if (turnAngle < 0) {
+        // left
+        turnrateLeft  = -1 * 0.1 * calibration.getFloat("leftturnWheelCalibration"); 
+        turnrateRight = 0.1;
+        duration      = abs(turnAngle) * calibration.getFloat("leftturnMsPerDeg");
+        
+      } else {
+        // right
+        turnrateLeft  = 0.1;
+        turnrateRight = -1 * 0.1 * calibration.getFloat("rightturnWheelCalibration");
+        duration      = turnAngle * calibration.getFloat("rightturnMsPerDeg");
+      }
+      
+      this.commandQueue.add(
+        this.builder.serialize(SerialRequestFlexiblemovement.COMMAND_CHAR, turnrateLeft, turnrateRight, (int) duration) 
+      );
+    }
+  }
+  
+ /**
+  * sub-command that handles the calibration of forward and backward movement
+  *
+  * do not call this externally, it is used from within cmdFlexibleMovement()
+  *
+  * @param int distance
+  * @param JSONObject calibration
+  */
+  void _cmdFlexibleDrive(int distance, JSONObject calibration) {
+    float turnrateLeft  = 0.0;
+    float turnrateRight = 0.0;
+    float duration      = 0.0;
+    
+    if (distance != 0) {
+      if (distance > 0) {
+        // forward
+        turnrateLeft  = 0.1 * calibration.getFloat("forwardWheelCalibration");
+        turnrateRight = 0.1;
+        duration      = distance * calibration.getFloat("forwardMsPerMM");
+                
+      } else {
+        // backward
+        turnrateLeft  = -0.1;
+        turnrateRight = -0.1 * calibration.getFloat("backwardWheelCalibration");
+        duration      = distance * calibration.getFloat("backwardMsPerMM");
+      }
+      
+      this.commandQueue.add(
+        this.builder.serialize(SerialRequestFlexiblemovement.COMMAND_CHAR, turnrateLeft, turnrateRight, (int) duration) 
+      );
+    }
   }
   
  /**

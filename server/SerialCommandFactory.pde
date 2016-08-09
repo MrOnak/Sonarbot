@@ -76,10 +76,18 @@ class SerialCommandFactory {
   */
   SerialCommand makeCommand(char cmd, Object... params) {
     SerialCommand retval = null;
+    Float f0, f1;
     Integer i0, i1, i2;
     String s0;
     
     switch (cmd) {
+      case SerialRequestFlexiblemovement.COMMAND_CHAR:
+        f0 = (Float) params[0];
+        f1 = (Float) params[1];
+        i0 = (Integer) params[2];
+        retval = new SerialRequestFlexiblemovement(f0.floatValue(), f1.floatValue(), i0.intValue());
+        break;
+      
       case SerialRequestTurnleft.COMMAND_CHAR:
         i0 = (Integer) params[0];
         retval = new SerialRequestTurnleft(i0.intValue());

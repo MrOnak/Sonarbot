@@ -171,6 +171,16 @@ abstract class SerialCommand {
   }
   
  /**
+  * sets the value of the parameter at the given index from a float value
+  *
+  * @param int index
+  * @param float value
+  */
+  protected void setParamFromFloat(int index, float value) {
+    this.setParamFromString(index, new String(this.convertFloatToBytes(value)));
+  }
+  
+ /**
   * generic toString()
   *
   * @return String

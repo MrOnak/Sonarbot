@@ -103,11 +103,11 @@ void drawHUD() {
  * draws a help 'popup' after the user has pressed the 'h' key
  */
 void drawHelp() {
-  int width = 300;
+  int width  = 300;
   int height = 170;
   int border = 10;
-  int left = width / 2 - border;
-  int top = height / 2 - border - border;
+  int left   = width / 2 - border;
+  int top    = height / 2 - border - border;
   
   
   if (helpWindowVisibility) {
@@ -122,12 +122,13 @@ void drawHelp() {
     
     text("mousewheel",          centerX - left, centerY - top + 20*0); text("zoom",                    centerX, centerY - top + 20*0);
     text("right-mouse & drag",  centerX - left, centerY - top + 20*1); text("pan the view",            centerX, centerY - top + 20*1);
-    text("c",                   centerX - left, centerY - top + 20*2); text("center view, reset zoom", centerX, centerY - top + 20*2);
+    text("v",                   centerX - left, centerY - top + 20*2); text("center view, reset zoom", centerX, centerY - top + 20*2);
     text("s",                   centerX - left, centerY - top + 20*3); text("sonar sweep",             centerX, centerY - top + 20*3);
     text("b",                   centerX - left, centerY - top + 20*4); text("query battery",           centerX, centerY - top + 20*4);
     text("i",                   centerX - left, centerY - top + 20*5); text("initialize robot",        centerX, centerY - top + 20*5);
     text("hold r & left-click", centerX - left, centerY - top + 20*6); text("rotate the robot",        centerX, centerY - top + 20*6);
-    text("hold m & left-click", centerX - left, centerY - top + 20*7); text("move the robot",          centerX, centerY - top + 20*7);
+//    text("hold m & left-click", centerX - left, centerY - top + 20*7); text("turn & move the robot",   centerX, centerY - top + 20*7);
+    text("hold f & left-click", centerX - left, centerY - top + 20*7); text("calibrated turn & move",  centerX, centerY - top + 20*7);
   }
 }
 
@@ -144,7 +145,6 @@ void drawCues() {
   
   int dist  = bot.getDistanceToScreenPos(mX, mY);
   int angle = bot.getRotationToScreenPos(mX, mY);
-  
   
   if (rotationCueVisibility) {
     rectMode(CORNER);
@@ -216,7 +216,7 @@ float scalePxToMM(float px) {
  */
 void keyPressed() {
   switch (key) {
-    case 'c':
+    case 'v':
       // center the view
       scrollX = 0.0;
       scrollY = 0.0;
@@ -228,7 +228,8 @@ void keyPressed() {
     case 'r':
       rotationCueVisibility = true;
       break;
-    case 'm':
+    case 'f':
+    //case 'm':
       moveCueVisibility = true;
       break;
       
@@ -249,7 +250,8 @@ void keyReleased() {
     case 'r':
       rotationCueVisibility = false;
       break;
-    case 'm':
+    case 'f':
+    //case 'm':
       moveCueVisibility = false;
       break;
     case 's':
@@ -314,12 +316,23 @@ void mouseClicked(MouseEvent event) {
       case 'r':
         angle = bot.getRotationToScreenPos(mX, mY);        
         println("rotating bot by " + angle + " degrees");
+        
+        commandHandler.addCommand(SerialRequestFlexiblemovement.COMMAND_CHAR, angle);
+        /*
         if (angle > 0) {
           commandHandler.addCommand(SerialRequestTurnright.COMMAND_CHAR, angle);
         } else {
           commandHandler.addCommand(SerialRequestTurnleft.COMMAND_CHAR, angle);
-        }
+        }*/
         break;
+      case 'f':
+        dist  = bot.getDistanceToScreenPos(mX, mY);
+        angle = bot.getRotationToScreenPos(mX, mY);        
+        println("calibrated move to position for " + dist + " mm after rotating by " + angle + " degrees");
+        
+        commandHandler.addCommand(SerialRequestFlexiblemovement.COMMAND_CHAR, angle, dist);
+        break;
+        /*
       case 'm':
         dist  = bot.getDistanceToScreenPos(mX, mY);
         angle = bot.getRotationToScreenPos(mX, mY);        
@@ -331,7 +344,7 @@ void mouseClicked(MouseEvent event) {
           commandHandler.addCommand(SerialRequestTurnleft.COMMAND_CHAR, angle);
         }
         commandHandler.addCommand(SerialRequestMoveforward.COMMAND_CHAR, dist);
-        break;
+        break;*/
       default:
     }
   }
